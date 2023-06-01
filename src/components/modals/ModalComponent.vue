@@ -1,6 +1,6 @@
 <template>
   <div class="modal-body">
-    <div style="display: flex; width: 100%;">
+    <div style="display: flex; width: 100%; align-items: center;">
       <span class="grey-block" @click="onCloseModal">-</span>
       <span class="header">{{ modalProps.title }}</span>
     </div>
@@ -12,6 +12,8 @@
 </template>
 
 <script setup>
+import { computed } from '@vue/reactivity';
+
 const emit = defineEmits(['close-modal']);
 
 const modalProps = defineProps({
@@ -19,11 +21,26 @@ const modalProps = defineProps({
     type: String,
     default: () => `You're not supposed to be here`,
   },
+  width: {
+    type: Number,
+    default: 75,
+  },
+  height: {
+    type: Number,
+    default: 75,
+  },
 });
 
 const onCloseModal = () => {
   emit('close-modal', false);
 };
+
+const modalDimension = computed(() => {
+  return {
+    width: `${ modalProps.width }vw`,
+    height: `${ modalProps.height }vh`,
+  };
+});
 </script>
 
 <style scoped>
@@ -34,8 +51,8 @@ const onCloseModal = () => {
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
-  width: calc(75vw - (100vw - 100%));
-  height: calc(75vh - (100vh - 100%));
+  width: calc(v-bind('modalDimension.width') - (100vw - 100%));
+  height: calc(v-bind('modalDimension.height') - (100vh - 100%));
   border-style: ridge;
   border-width: 6px;
   border-color: grey;
@@ -63,7 +80,7 @@ const onCloseModal = () => {
   padding: 4px;
   color: yellow;
   border-style: solid;
-  border-width: 1px;
+  border-width: 3px;
   border-color: blue;
   background-color: blue;
 }

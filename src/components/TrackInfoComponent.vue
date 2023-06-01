@@ -1,16 +1,16 @@
 <template>
   <div style="flex: 1; display: flex; flex-direction: column;">
-    <img :src="infoProps.thumbnailUrl" class="thumbnail">
-    <p style="font-weight: bold; font-size: 22px;">{{ infoProps.title }}</p>
-    <span>Date: {{ uploadedDate() }}</span>
+    <img :src="thumbnail" class="thumbnail">
+    <p style="font-weight: bold; font-size: 22px;">{{ title }}</p>
+    <span>Date: {{ uploadedDate }}</span>
 
     <div style="display: flex; align-items: center; margin-bottom: 4px;">
       <span>By:</span>
-      <img :src="infoProps.avatarUrl" class="avatar">
+      <img :src="avatar" class="avatar" @click="onAvatarClick">
     </div>
-            
+
     <div style="display: flex;">
-      <button style="flex: 1;" @click="onAddToPlaylist">Add to playlist</button>
+      <button style="flex: 1;" :disabled="infoProps.trackData == null" @click="onAddToPlaylist">Add to playlist</button>
 
       <div class="item" style="flex-grow: 0;" @click="onRate">
         <span v-show="infoProps.rating === 5">
@@ -33,44 +33,40 @@
 </template>
 
 <script setup>
+import Track from '../objects/Track.js';
 import noSignal from '../assets/no_signal.png';
+import { computed } from '@vue/reactivity';
 
-const emit = defineEmits(['show-playlists', 'rate']);
+const emit = defineEmits(['show-profile', 'show-playlists', 'rate']);
+
+const onAvatarClick = () => {
+  if (infoProps.trackData == null) {
+    return;
+  }
+
+  emit('show-profile', infoProps.trackData?.memberId);
+};
 
 const onAddToPlaylist = () => {
-  emit('show-playlists', true);
+  emit('show-playlists', infoProps.trackData?.trackId);
 };
 
 const onRate = () => {
+  if (infoProps.trackData == null) {
+    return;
+  }
+
   emit('rate', infoProps.rating === 5 ? 0 : 5);
 }
 
 const infoProps = defineProps({
-  title: {
-    type: String,
-    required: true,
-    default: 'Please select a track',
-  },
-  date: {
-    type: Date | String,
-    required: true,
-    default: new Date(),
-  },
-  authorId: {
-    type: Number,
+  trackData: {
+    type: Track,
     required: true,
   },
   avatarUrl: {
     type: String,
     default: noSignal,
-  },
-  thumbnailUrl: {
-    type: String,
-    default: noSignal,
-  },
-  description: {
-    type: String,
-    default: 'No signal',
   },
   rating: {
     type: Number,
@@ -78,18 +74,52 @@ const infoProps = defineProps({
       return value >= 0;
     },
     default: 0,
-  }
+  },
 });
 
-const uploadedDate = () => {
-  if (!(infoProps.date instanceof Date)) {
-    return infoProps.date;
+const title = computed(() => {
+  if (infoProps.trackData == null) {
+    return 'Please select a track';
   }
 
-  const date = infoProps.date;
+  const trackName = infoProps.trackData.trackName;
+  const artistName = infoProps.trackData.artistName;
+  return `${ trackName } - ${ artistName }`;
+});
+
+const avatar = computed(() => {
+  if (infoProps.avatarUrl == null) {
+    return noSignal;
+  }
+  return infoProps.avatarUrl;
+});
+
+const thumbnail = computed(() => {
+  if (infoProps.trackData == null) {
+    return noSignal;
+  }
+  return infoProps.trackData.thumbnail;
+});
+
+const description = computed(() => {
+  if (infoProps.trackData == null) {
+    return 'No signal';
+  }
+  return infoProps.trackData.description;
+});
+
+const uploadedDate = computed(() => {
+  let date;
+  if (infoProps.trackData == null) {
+    date = new Date();
+  }
+  else {
+    date = infoProps.trackData.dateCreated;
+  }
+
   const month = date.toLocaleString('default', { month: 'long' });
   return `${ month} ${ date.getDate() } ${ date.getFullYear() }`;
-};
+});
 </script>
 
 <style scoped>
@@ -117,6 +147,7 @@ const uploadedDate = () => {
 }
 
 .item:hover {
+  cursor: pointer;
   background-color: gray;
   border-radius: 360px;
 }

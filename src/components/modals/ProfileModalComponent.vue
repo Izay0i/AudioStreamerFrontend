@@ -18,11 +18,19 @@
           <input type="password" placeholder="Retype new password">
           <button @click="onSaveCredentials">Save changes</button>
         </form>
+
+        <button v-show="false" style="margin-top: 4px;">Follow</button>
       </div>
     </div>
 
-    <div class="section">
-     
+    <div class="section" style="overflow-y: auto;">
+      <input type="text" class="search-input" placeholder="Search" @keydown.enter="">
+      <TrackItemComponent 
+      v-for="(track, index) in mockTrackObjects" 
+      :key="index" 
+      :data="track" 
+      @play="(value) => console.log(value)" 
+      @show-playlists="onShowPlaylists(track.trackId)" />
     </div>
 
     <div class="section">
@@ -37,10 +45,35 @@
 </template>
 
 <script setup>
+import Track from '../../objects/Track.js';
 import noSignal from '../../assets/no_signal.png';
 import ModalComponent from './ModalComponent.vue';
+import TrackItemComponent from '../TrackItemComponent.vue';
 
-const emit = defineEmits(['close-modal-top-level']);
+const mockTrackObject = new Track(
+  1, 1, 
+  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie', 
+  'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_penelope_20230519T170042218.mp3&containerName=media&contentType=audio%2Fmpeg', 
+  'https://static.zerochan.net/Mobile.Suit.Gundam%3A.Hathaway%27s.Flash.full.3125502.jpg', 
+  [], 
+  new Date()
+);
+
+const mockTrackObject2 = new Track(
+  2, 1, 
+  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie', 
+  'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_penelope_20230519T170042218.mp3&containerName=media&contentType=audio%2Fmpeg', 
+  'https://static.zerochan.net/Mobile.Suit.Gundam%3A.Hathaway%27s.Flash.full.3125502.jpg', 
+  [], 
+  new Date()
+);
+
+const mockTrackObjects = [
+  mockTrackObject, 
+  mockTrackObject2, 
+];
+
+const emit = defineEmits(['close-modal-top-level', 'show-playlists-top-level']);
 
 const profileProps = defineProps({
   avatar: {
@@ -64,6 +97,12 @@ const profileProps = defineProps({
 const onModalClose = (value) => {
   emit('close-modal-top-level', value);
 };
+
+const onShowPlaylists = (value) => {
+  console.log(value);
+  emit('show-playlists-top-level', value);
+};
+
 const onChangeAvatar = () => {};
 const onSaveCredentials = () => {};
 const onSaveInfo = () => {};
@@ -99,6 +138,15 @@ const onSaveInfo = () => {};
 .form > * {
   margin-top: 6px;
   padding: 6px;
+}
+
+.search-input {
+  position: sticky;
+  top: 0;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 0;
+  background-color: white;
 }
 
 .info-section {

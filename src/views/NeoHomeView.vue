@@ -7,7 +7,7 @@
 
     <div class="side-profile">
       <span @click="onProfileModalClick">Profile</span>
-      <span>Exit</span>
+      <span @click="onExitModalClick">Exit</span>
     </div>
 
     <div class="contents">
@@ -28,17 +28,27 @@
           <button class="add-track" @click="onAddTrackClick">Upload track</button>
         </div>
 
-        <img :src="logo" class="logo" />
+        <!-- <img :src="logo" class="logo" /> -->
       </div>
       
       <div class="section" style="overflow-y: auto;">
-        <input type="text" class="search-input" placeholder="Search">
-        <TrackItemComponent v-for="(track, index) in mockTrackObjects" :key="index" :data="track" @play="(value) => console.log(value)" />
+        <input type="text" class="search-input" placeholder="Search" @keydown.enter="">
+        <TrackItemComponent 
+        v-for="(track, index) in mockTrackObjects" 
+        :key="index" 
+        :data="track" 
+        @play="onTrackClick" 
+        @show-playlists="onPlaylistModalClick" />
       </div>
 
       <div class="section">
         <div style="flex: 3;" class="info-section">
-          <TrackInfoComponent @show-playlists="(value) => console.log(value)" @rate="(value) => console.log(value)" />
+          <TrackInfoComponent 
+          :trackData="selectedTrack" 
+          :avatarUrl="selectedTrackUserAvatar"  
+          @show-profile="onProfileModalClick" 
+          @show-playlists="onPlaylistModalClick" 
+          @rate="console.log('rated')" />
         </div>
 
         <div style="flex: 1;" class="audio-section">
@@ -47,8 +57,8 @@
           </textarea>
           
           <div class="audio">
-            <audio controls controlslist="nodownload" style="flex: 1;">
-              <source :src=mockTrackObject.url type="audio/mpeg">
+            <audio controls controlslist="nodownload" style="flex: 1;" :key="selectedTrack?.url">
+              <source :src="selectedTrack?.url" type="audio/mpeg">
             </audio>
 
             <div style="flex: ; display: flex; align-items: center;">
@@ -69,13 +79,13 @@
       </div>
     </div>
 
-    <ProfileModalComponent v-show="showProfileModal" @close-modal-top-level="onCloseProfileModalClick" />
-    <ExitModalComponent v-show="showExitModal" />
-    <AddToPlaylistModalComponent v-show="showPlaylistsModal" />
+    <ProfileModalComponent v-show="showProfileModal" @close-modal-top-level="onCloseProfileModalClick" @show-playlists-top-level="onPlaylistModalClick" />
+    <ExitModalComponent v-show="showExitModal" @close-modal-top-level="onCloseExitModalClick" />
+    <AddToPlaylistModalComponent v-show="showPlaylistsModal" :track-id="selectedTrackId" @close-modal-top-level="onClosePlaylistModalClick" />
     <CurrentPlaylistModalComponent v-show="showCurrentPlaylistModal" />
     <UploadTrackModalComponent v-show="showUploadTrackModal" />
-    <WelcomeModalComponent v-show="showWelcomeModal" />
-    <AboutModalComponent v-show="showAboutModal" />
+    <WelcomeModalComponent v-show="showWelcomeModal" @close-modal-top-level="onCloseWelcomeModalClick" />
+    <AboutModalComponent v-show="showAboutModal" @close-modal-top-level="onCloseAboutModalClick" />
   </div>
 </template>
 
@@ -96,6 +106,9 @@ import WelcomeModalComponent from '../components/modals/WelcomeModalComponent.vu
 import AboutModalComponent from '../components/modals/AboutModalComponent.vue';
 
 const defaultDir = ref('*.*');
+const selectedTrack = ref(null);
+const selectedTrackId = ref(null);
+const selectedTrackUserAvatar = ref(null);
 
 // Fun
 const showProfileModal = ref(false);
@@ -106,40 +119,64 @@ const showUploadTrackModal = ref(false);
 const showWelcomeModal = ref(false);
 const showAboutModal = ref(false);
 
+const onFolderClick = (item) => {
+  defaultDir.value = item.icon === 'folder' ? item.title.toLowerCase() : '*.*';
+  item.func();
+};
+
+const onTrackClick = (track) => {
+  selectedTrack.value = track;
+};
+
+const onProfileModalClick = () => showProfileModal.value = true;
+const onCloseProfileModalClick = (value) => showProfileModal.value = value;
+
+const onExitModalClick = () => showExitModal.value = true;
+const onCloseExitModalClick = (value) => showExitModal.value = value;
+
+const onPlaylistModalClick = (value) => {
+  showPlaylistsModal.value = true;
+  selectedTrackId.value = value;
+};
+const onClosePlaylistModalClick = (value) => showPlaylistsModal.value = value;
+
+const onWelcomeModalClick = () => showWelcomeModal.value = true;
+const onCloseWelcomeModalClick = (value) => showWelcomeModal.value = value;
+
+const onAboutModalClick = () => showAboutModal.value = true;
+const onCloseAboutModalClick = (value) => showAboutModal.value = value;
+
 const mockTrackObject = new Track(
   1, 1, 
-  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie', 
+  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie.', 
   'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_penelope_20230519T170042218.mp3&containerName=media&contentType=audio%2Fmpeg', 
   'https://static.zerochan.net/Mobile.Suit.Gundam%3A.Hathaway%27s.Flash.full.3125502.jpg', 
   [], 
-  new Date()
+  new Date('2021-06-11')
+);
+
+const mockTrackObject2 = new Track(
+  2, 1, 
+  'Vigilante', 'Sawano Hiroyuki', 'Bird up', 
+  'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_Vigilante_20230523T124248985.mp3&containerName=media&contentType=audio%2Fmpeg', 
+  'https://cf.shopee.vn/file/0c94b615f11109960bebd3d2286af391', 
+  [], 
+  new Date('2018-11-30')
 );
 
 const mockTrackObjects = [
   mockTrackObject, 
-  mockTrackObject, 
+  mockTrackObject2, 
 ];
 
 const listItems = [
-  { title: 'Home', icon: 'folder', }, 
-  { title: 'Discover', icon: 'folder', }, 
-  { title: 'Timeline', icon: 'folder', }, 
-  { title: 'Storage', icon: 'folder', }, 
-  { title: 'welcome.txt', icon: 'file', }, 
-  { title: 'about.txt', icon: 'file', }, 
+  { title: 'Home', icon: 'folder', func: () => {} }, 
+  { title: 'Discover', icon: 'folder', func: () => {} }, 
+  { title: 'Timeline', icon: 'folder', func: () => {} }, 
+  { title: 'Storage', icon: 'folder', func: () => {} }, 
+  { title: 'welcome.txt', icon: 'file', func: onWelcomeModalClick }, 
+  { title: 'about.txt', icon: 'file', func: onAboutModalClick }, 
 ];
-
-const onFolderClick = (item) => {
-  defaultDir.value = item.icon === 'folder' ? item.title.toLowerCase() : '*.*';
-};
-
-const onProfileModalClick = () => {
-  showProfileModal.value = true;
-};
-
-const onCloseProfileModalClick = (value) => {
-  showProfileModal.value = value;
-};
 </script>
 
 <style scoped>
@@ -299,6 +336,7 @@ audio::-webkit-media-controls-panel {
 }
 
 .item:hover {
+  cursor: pointer;
   background-color: gray;
   border-radius: 360px;
 }
