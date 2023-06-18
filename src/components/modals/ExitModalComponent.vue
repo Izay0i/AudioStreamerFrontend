@@ -1,16 +1,25 @@
 <template>
   <ModalComponent :width="20" :height="10" title="Quit current session?" @close-modal="onModalClose">
     <div class="section">
-      <button @click="">Yes</button>
+      <button @click="onExitClick">Yes</button>
       <button style="margin-left: 4px;" @click="emit('close-modal-top-level', false)">No</button>
     </div>
   </ModalComponent>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+import { RemoveCredentials } from '../../functions/StorageHelper.js';
 import ModalComponent from './ModalComponent.vue';
 
 const emit = defineEmits(['close-modal-top-level']);
+
+const router = useRouter();
+
+const onExitClick = async () => {
+  await RemoveCredentials();
+  router.push('credentials');
+};
 
 const onModalClose = (value) => {
   emit('close-modal-top-level', value);

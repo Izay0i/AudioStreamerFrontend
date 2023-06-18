@@ -1,0 +1,1 @@
+export const CREDENTIALS_KEY_NAME = 'credentials';

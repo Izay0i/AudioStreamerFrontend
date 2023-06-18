@@ -1,18 +1,9 @@
 <template>
-  <NeoHomeView></NeoHomeView>
+  <RouterView />
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import NeoHomeView from './views/NeoHomeView.vue';
 
-// onMounted(async () => {
-//   const response = await fetch('https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_y2mate_20230519T122816992.mp3&containerName=media&contentType=audio%2Fmpeg', {
-//     method: 'GET',
-//     mode: 'cors',
-//   });
-//   console.log(await response);
-// });
 </script>
 
 <style>
@@ -48,6 +39,23 @@ import NeoHomeView from './views/NeoHomeView.vue';
   background-color: darkgray;
 }
 
+audio {
+  background-color: lightgray;
+  border-style: groove;
+  border-width: 4px;
+}
+
+audio::-webkit-media-controls-panel {
+  background-color: lightgray;
+}
+
+li {
+  list-style: none;
+  margin-left: 6px;
+  font-weight: bold;
+  font-size: 18px;
+}
+
 button {
   position: relative;
   padding: 6px;
@@ -58,16 +66,32 @@ button {
   border-color: grey;
 }
 
-button:active:not(:disabled) {
+button:active:not(:disabled), input[type="file"]::file-selector-button:active {
   border-style: inset;
 }
 
-textarea {
-  outline: none;
+input {
+  border-radius: 0;
+  border-width: 1px;
+}
+
+input[type="file"]::file-selector-button {
+  padding: 6px;
+  font-size: 12px;
+  border-style: outset;
+  border-width: 5px;
+  border-radius: 0;
+  border-color: grey;
 }
 
 input:focus {
   outline: none;
+}
+
+textarea {
+  outline: none;
+  border-radius: 0;
+  border-width: 1px;
 }
 
 body {

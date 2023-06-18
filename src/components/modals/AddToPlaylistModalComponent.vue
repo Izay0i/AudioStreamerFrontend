@@ -21,7 +21,7 @@ const emit = defineEmits(['close-modal-top-level']);
 
 const playlistModalProps = defineProps({
   playlists: {
-    type: Array<Playlist>(64),
+    type: Playlist[64],
   },
   trackId: {
     type: Number,

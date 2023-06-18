@@ -2,110 +2,232 @@
   <ModalComponent title="Profile" @close-modal="onModalClose">
     <div class="section">
       <div class="avatar-section">
-        <img :src="avatar" class="avatar">
-        <button @click="onChangeAvatar">Change avatar</button>
-
-        <form class="form" @submit.prevent>
-          <label>Name:</label>
-          <input type="text" placeholder="Display name" :value="profileProps.name">
-          <label>Email:</label>
-          <input type="email" placeholder="Email" :value="profileProps.email">
-          <label>Current password:</label>
-          <input type="password" placeholder="Current password">
-          <label>New password:</label>
-          <input type="password" placeholder="New password">
-          <label>Retype new password:</label>
-          <input type="password" placeholder="Retype new password">
-          <button @click="onSaveCredentials">Save changes</button>
+        <img :src="userAvatar" class="avatar">
+        <form style="margin-top: 4px;" v-if="isMainUser">
+          <input type="file" accept=".jpeg, .jpg, .png, .gif" @change="onFileChange">
         </form>
 
-        <button v-show="false" style="margin-top: 4px;">Follow</button>
+        <form class="form" @submit.prevent>
+          <span>Joined: {{ localeDate }}</span>
+
+          <template v-if="isMainUser">
+            <label for="email">Email:</label>
+            <input id="email" type="email" placeholder="Email" readonly :disabled="isMainUser" v-model="userData.email">
+          </template>
+
+          <label for="name">Name:</label>
+          <input id="name" type="text" placeholder="Display name" :readonly="!isMainUser" v-model="userData.displayName">
+          
+          <template v-if="isMainUser">
+            <label for="currpass">Current password:</label>
+            <input id="currpass" type="password" placeholder="Current password" v-model="currentPassInput">
+            <label for="newpass">New password:</label>
+            <input id="newpass" type="password" placeholder="New password" v-model="newPassInput">
+            <label for="repass">Confirm new password:</label>
+            <input id="repass" type="password" placeholder="Retype new password" v-model="renewPassInput">
+
+            <button @click="onSaveCredentials">Save changes</button>
+          </template>
+          <template v-else>
+            <button v-if="isFollowing" @click.once="onUnfollowUser">Unfollow</button>
+            <button v-else @click.once="onFollowUser">Follow</button>
+          </template>
+        </form>
       </div>
     </div>
 
     <div class="section" style="overflow-y: auto;">
       <input type="text" class="search-input" placeholder="Search" @keydown.enter="">
       <TrackItemComponent 
-      v-for="(track, index) in mockTrackObjects" 
+      v-for="(track, index) in userTracks" 
       :key="index" 
       :data="track" 
-      @play="(value) => console.log(value)" 
+      @play="onTrackClick" 
       @show-playlists="onShowPlaylists(track.trackId)" />
     </div>
 
     <div class="section">
       <div class="info-section">
-        <textarea readonly class="info">
-          {{ profileProps.info }}
-        </textarea>
-        <button style="margin-top: 4px;" @click="onSaveInfo">Save changes</button>
+        <textarea :readonly="!isMainUser" class="info" v-model="userData.biography"></textarea>
+        <button style="margin-top: 4px;" v-if="isMainUser" @click="onSaveBiography">Save changes</button>
       </div>
     </div>
   </ModalComponent>
 </template>
 
 <script setup>
-import Track from '../../objects/Track.js';
+import { onMounted, ref } from 'vue';
+import { computed } from '@vue/reactivity';
+import { GetCredentials } from '../../functions/StorageHelper.js';
+import CredentialsService from '../../services/CredentialsService.js';
+import MemberService from '../../services/MemberSevice.js';
+import FollowerService from '../../services/FollowerService.js';
+import MediaService from '../../services/MediaService.js';
+import TrackService from '../../services/TrackService.js';
+import Member from '../../objects/Member.js';
 import noSignal from '../../assets/no_signal.png';
 import ModalComponent from './ModalComponent.vue';
 import TrackItemComponent from '../TrackItemComponent.vue';
 
-const mockTrackObject = new Track(
-  1, 1, 
-  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie', 
-  'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_penelope_20230519T170042218.mp3&containerName=media&contentType=audio%2Fmpeg', 
-  'https://static.zerochan.net/Mobile.Suit.Gundam%3A.Hathaway%27s.Flash.full.3125502.jpg', 
-  [], 
-  new Date()
-);
+onMounted(async () => {
+  mainUserId.value = await GetCredentials();
+  //!!n : n != 0 > true, n = 0 > false
+  isMainUser.value = !!mainUserId.value && !!props.userId ? 
+    mainUserId.value === props.userId : !!mainUserId.value;
 
-const mockTrackObject2 = new Track(
-  2, 1, 
-  'Penelope', 'Sawano Hiroyuki', 'From the Hathaway\'s Flash movie', 
-  'https://audiostreamer.azurewebsites.net/api/media?src=https%3A%2F%2Fstreamingmediaapistorage.blob.core.windows.net%2Fmedia%2F1_penelope_20230519T170042218.mp3&containerName=media&contentType=audio%2Fmpeg', 
-  'https://static.zerochan.net/Mobile.Suit.Gundam%3A.Hathaway%27s.Flash.full.3125502.jpg', 
-  [], 
-  new Date()
-);
-
-const mockTrackObjects = [
-  mockTrackObject, 
-  mockTrackObject2, 
-];
-
-const emit = defineEmits(['close-modal-top-level', 'show-playlists-top-level']);
-
-const profileProps = defineProps({
-  avatar: {
-    type: String,
-    default: noSignal,
-  },
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-  },
-  info: {
-    type: String,
-    default: 'No signal',
-  },
+  await _getUserData();
+  await _getTracks();
+  await _getAvatar();
+  if (mainUserId.value != null) {
+    await _getFollowingList();
+  }
 });
+
+const mainUserId = ref(0);
+const isMainUser = ref(false);
+const isFollowing = ref(false);
+const userData = ref(new Member());
+const userAvatar = ref(noSignal);
+const userTracks = ref([]);
+const userFollowingList = ref([]);
+
+//inputs
+const imageFileInput = ref(null);
+const currentPassInput = ref('');
+const newPassInput = ref('');
+const renewPassInput = ref('');
+
+const emit = defineEmits(['close-modal-top-level', 'play-track', 'show-playlists-top-level']);
+
+const props = defineProps({
+  userId: {
+    type: Number,
+    default: 3,
+  }
+});
+
+const localeDate = computed(() => {
+  return new Date(userData.value.dateCreated).toLocaleString();
+});
+
+const _handleResponse = async (response) => {
+  if (response.statusCode === 200) {
+    await getFollowingList();
+  }
+};
+
+const _getUserData = async () => {
+  const response = await MemberService.GetMember(isMainUser.value ? mainUserId.value : props.userId);
+  userData.value = response.objects[0];
+};
+
+const _getTracks = async () => {
+  userTracks.value = await TrackService.GetTracksFromUserId(userData.value.memberId);
+};
+
+//No idea why the path is encoded(?)
+//So I have to reload the data to get the correct url
+//wtf???
+const _getAvatar = async () => {
+  await _getUserData();
+  // userAvatar.value = !!userData.value.avatar ? URL.createObjectURL(await MediaService.GetMedia({
+  //   src: userData.value.avatar,
+  //   containerName: 'avatar',
+  //   contentType: 'image/*',
+  // })) : noSignal;
+  const inlineImg = 'data:image/*;base64,' + btoa(noSignal);
+  userAvatar.value = !!userData.value.avatar ? 
+    MediaService.GetMediaStream(userData.value.avatar, 'avatar', 'image/*') : inlineImg;
+};
+
+const _getFollowingList = async () => {
+    userFollowingList.value = await FollowerService.GetFollowings(mainUserId.value);
+    isFollowing.value = userFollowingList.value.some(user => user.memberId === props.userId);
+};
+
+const onFileChange = (e) => imageFileInput.value = e.target.files[0];
+
+const onSaveCredentials = async () => {
+  let payload = {};
+  const canUpdatePassword = !!currentPassInput.value && 
+    !!newPassInput.value && 
+    !!renewPassInput.value && 
+    (newPassInput.value === renewPassInput.value);
+  
+  if (canUpdatePassword) {
+    payload = {
+      email: userData.value.email,
+      password: currentPassInput.value,
+      newPassword: newPassInput.value,
+      displayName: 'string',
+    };
+
+    await CredentialsService.ChangePassword(payload);
+    currentPassInput.value = newPassInput.value = renewPassInput.value = '';
+  }
+
+  let imageFilePath = userData.value.avatar;
+  if (!!imageFileInput.value) {
+    if (!!userData.value.avatar && !!imageFileInput.value) {
+      const imagePayload = {
+        url: userData.value.avatar,
+        containerName: 'avatar',
+      };
+
+      await MediaService.DeleteMedia(imagePayload);
+    }
+
+    const imagePayload = {
+      memberId: mainUserId.value,
+      containerName: 'avatar',
+      file: imageFileInput.value,
+    };
+
+    const response = await MediaService.UploadMedia(imagePayload);
+    imageFilePath = response.objects[0];
+  }
+
+  payload = {
+    email: userData.value.email,
+    displayName: userData.value.displayName,
+    avatar: imageFilePath,
+  };
+
+  await MemberService.UpdateMember(payload);
+  await _getAvatar();
+};
+
+const onSaveBiography = async () => {
+  const payload = {
+    email: userData.value.email,
+    biography: userData.value.biography,
+  };
+
+  await MemberService.UpdateMember(payload);
+};
+
+const onFollowUser = async () => {
+  const response = await FollowerService.FollowUser(mainUserId.value, props.userId);
+  await _handleResponse(response);
+};
+
+const onUnfollowUser = async () => {
+  const response = await FollowerService.UnfollowUser(mainUserId.value, props.userId);
+  await _handleResponse(response);
+};
 
 const onModalClose = (value) => {
   emit('close-modal-top-level', value);
 };
 
-const onShowPlaylists = (value) => {
+const onTrackClick = (value) => {
   console.log(value);
-  emit('show-playlists-top-level', value);
+  emit('play-track', value);
 };
 
-const onChangeAvatar = () => {};
-const onSaveCredentials = () => {};
-const onSaveInfo = () => {};
+const onShowPlaylists = (value) => {
+  emit('show-playlists-top-level', value);
+};
 </script>
 
 <style scoped>
@@ -115,7 +237,7 @@ const onSaveInfo = () => {};
 }
 
 .avatar-section {
-  margin: 4px;
+  padding: 4px;
   flex: 1; 
   display: flex; 
   flex-direction: column; 

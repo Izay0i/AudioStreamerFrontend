@@ -1,10 +1,7 @@
 <template>
   <ModalComponent :width="50" :height="50" title="about.txt" @close-modal="onModalClose">
     <div class="section">
-      <textarea readonly class="text-area">
-        This website is used for educational purposes only.
-        It is advised that you do not provide sensitive information, such as your credentials, birthplace, etc...
-        Under no circumstances will I be responsible for anything that happens to your data.
+      <textarea readonly class="text-area">Disclaimer: This website is used for educational purposes only.
       </textarea>
       <img :src="logo" class="logo" />
     </div>
