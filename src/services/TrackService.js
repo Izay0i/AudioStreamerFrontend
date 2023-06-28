@@ -7,8 +7,8 @@ export default {
     const response = await fetch(`${BASE_URL}/${name}`);
     return response.json();
   },
-  async GetTracksWithTheMostViewsOfTheDay() {
-    const response = await fetch(`${BASE_URL}/${name}/top`);
+  async GetTracksWithTheMostViewsOfTheDay(number) {
+    const response = await fetch(`${BASE_URL}/${name}/top/${number}`);
     return response.json();
   },
   async GetTracksFromUserId(uId) {
@@ -48,14 +48,14 @@ export default {
     return response.json();
   },
   async IncreaseViewCount(id) {
-    const response = await fetch(`${BASE_URL}/${name}/incviews/track/${id}`, {
+    const response = await fetch(`${BASE_URL}/${name}/views/increase/track/${id}`, {
       method: 'PATCH',
       mode: 'cors',
     });
     return response.json();
   },
   async ResetViewCountsOfAllTracks() {
-    const response = await fetch(`${BASE_URL}/${name}/resetviews`, {
+    const response = await fetch(`${BASE_URL}/${name}/views/reset`, {
       method: 'PATCH',
       mode: 'cors',
     });

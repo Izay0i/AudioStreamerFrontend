@@ -1,7 +1,7 @@
 export default class Caption {
-    constructor(timestamp, duration, caption) {
+    constructor(timestamp, duration, message) {
         this.timestamp = timestamp;
         this.duration = duration;
-        this.caption = caption;
+        this.message = message;
     }
 }

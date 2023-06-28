@@ -7,6 +7,10 @@ export default {
     const response = await fetch(`${BASE_URL}/${name}/user/${id}`);
     return response.json();
   },
+  async GetTracksFromFollowings(id) {
+    const response = await fetch(`${BASE_URL}/${name}/tracks/user/${id}`);
+    return response.json();
+  },
   async FollowUser(id, followId) {
     const response = await fetch(`${BASE_URL}/${name}/user/${id}/follow/${followId}`, {
       method: 'POST',

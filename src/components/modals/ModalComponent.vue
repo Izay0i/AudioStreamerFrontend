@@ -29,6 +29,10 @@ const modalProps = defineProps({
     type: Number,
     default: 75,
   },
+  zIndex: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const onCloseModal = () => {
@@ -58,7 +62,7 @@ const modalDimension = computed(() => {
   border-color: grey;
   background-color: lightgray;
   box-shadow: 12px 20px rgba(0, 0, 0, 0.72);
-  z-index: 999;
+  z-index: v-bind('modalProps.zIndex');
 }
 
 .grey-block {

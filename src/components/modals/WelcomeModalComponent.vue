@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="50" :height="17" title="welcome.txt" @close-modal="onModalClose">
+  <ModalComponent :width="50" :height="50" title="welcome.txt" @close-modal="onModalClose">
     <div class="section">
       <textarea readonly class="text-area">Hi there! Welcome to my website!!
         Feel free to look around.
@@ -7,9 +7,14 @@
         Check it out :)
 
         To get started, why don't you click on any of the folders
-
-        {{ billionsMustLaugh }}
       </textarea>
+
+      <details>
+        <summary>Woah woah pipebomb so cool i wonder what happens if I</summary>
+        <textarea>
+          {{ billionsMustLaugh }}
+        </textarea>
+      </details>
     </div>
   </ModalComponent>
 </template>

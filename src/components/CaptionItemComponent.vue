@@ -15,7 +15,7 @@
       placeholder="duration" 
       v-model="props.data.duration" 
       :disabled="!isEditable">
-      <textarea placeholder="subtitle" v-model="props.data.caption" :disabled="!isEditable"></textarea>
+      <textarea placeholder="subtitle" v-model="props.data.message" :disabled="!isEditable"></textarea>
     </form>
 
     <div class="buttons">
@@ -41,13 +41,16 @@ const props = defineProps({
     default: {
       timestamp: 0.0,
       duration: 0.0,
-      caption: 'foobar',
+      message: 'foobar',
     }
-  }
+  },
 });
 
 const onSaveClick = () => {
-  if (props.data.timestamp < 0 || props.data.duration < 0 || props.data.caption === '') {
+  if (props.data.timestamp < 0 || 
+  props.data.duration < 0 || 
+  props.data.message === '') 
+  {
     return;
   }
 
@@ -89,8 +92,8 @@ const onRemoveClick = () => {
   flex: 1;
 }
 
-/* .buttons > button:nth-of-type(3) {
-  background-color: red;
+.buttons > button:nth-of-type(3) {
+  background-color: darkred;
   color: white;
-} */
+}
 </style>

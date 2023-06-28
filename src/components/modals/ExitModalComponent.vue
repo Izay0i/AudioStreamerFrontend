@@ -12,9 +12,9 @@ import { useRouter } from 'vue-router';
 import { RemoveCredentials } from '../../functions/StorageHelper.js';
 import ModalComponent from './ModalComponent.vue';
 
-const emit = defineEmits(['close-modal-top-level']);
-
 const router = useRouter();
+
+const emit = defineEmits(['close-modal-top-level']);
 
 const onExitClick = async () => {
   await RemoveCredentials();

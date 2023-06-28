@@ -1,4 +1,4 @@
-export const fallbackPlaylistName = 'Likes';
+export const fallbackPlaylistName = 'Liked tracks';
 
 /*
 有象無象 人の成り

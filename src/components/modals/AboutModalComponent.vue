@@ -3,7 +3,7 @@
     <div class="section">
       <textarea readonly class="text-area">Disclaimer: This website is used for educational purposes only.
       </textarea>
-      <img :src="logo" class="logo" />
+      <img :src="logo" loading="lazy" alt="banner" class="logo" />
     </div>
   </ModalComponent>
 </template>

@@ -3,6 +3,8 @@
     <img src="../assets/backgrounds/background.gif" class="background" alt="escalator">
   </div>
 
+  <audio preload="auto" autoplay loop :src="BGSong"></audio>
+
   <ModalComponent :width="30" :height="45" :title="defaultPath + defaultDir">
     <div class="section" style="flex: 1; overflow: hidden;">
       <ul class="folders">
@@ -39,20 +41,17 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
+import { minNameLength, maxDisplayNameLength, minPasswordLength } from '../constants/NumericConstants.js';
 import { SaveCredentials } from '../functions/StorageHelper.js';
+import BGSong from '../assets/music/background_music.mp3';
 import CredentialsService from '../services/CredentialsService.js';
 import PlaylistService from '../services/PlaylistService.js';
-import BGSong from '../assets/music/background_music.mp3';
 import ModalComponent from '../components/modals/ModalComponent.vue';
 
-onMounted(() => {
-  //_startBGSong();
-});
-
-const defaultPath = ref('C:\\files\\projects\\audio_streamer\\');
+const defaultPath = 'C:\\files\\projects\\audio_streamer\\';
 const defaultDir = ref('*.*');
 const isRegisterMode = ref(false);
 
@@ -70,19 +69,15 @@ const _listItems = [
   { title: 'main', icon: 'folder', func: () => router.push('main') }, 
 ];
 
-const _startBGSong = () => {
-  const bgSong = new Audio(BGSong);
-  bgSong.autoplay = true;
-  bgSong.loop = true;
-  bgSong.volume = 0.2;
-};
-
 const _handleResponse = async (response) => {
-  if (response.statusCode === 200) {
+  if (response.statusCode === 200 || response.statusCode === 201) {
     await SaveCredentials(response.objects[0]);
     router.push('main');
   }
-}
+  else {
+    alert(response.message);
+  }
+};
 
 const onFolderClick = (item) => {
   isRegisterMode.value = item.title === 'register';
@@ -91,6 +86,27 @@ const onFolderClick = (item) => {
 };
 
 const onSignUpClick = async () => {
+  if (emailInput.value.length === 0 || 
+    passwordInput.value.length === 0 || 
+    repassInput.value.length === 0 || 
+    nameInput.value.length === 0) 
+  {
+    alert('Credentials fields must not be empty.');
+    return;
+  }
+  if (passwordInput.value.length < minPasswordLength || repassInput.value.length < minPasswordLength) {
+    alert(`Password must be ${ minPasswordLength } characters at minimum.`);
+    return;
+  }
+  if (passwordInput.value !== repassInput.value) {
+    alert(`Mismatch values in password fields.`);
+    return;
+  }
+  if (nameInput.value.length < minNameLength || nameInput.value.length > maxDisplayNameLength) {
+    alert(`Name must be within ${ minNameLength } - ${ maxDisplayNameLength } characters.`);
+    return;
+  }
+
   const payload = {
     email: emailInput.value,
     password: passwordInput.value,
@@ -98,11 +114,10 @@ const onSignUpClick = async () => {
     displayName: nameInput.value,
   };
 
-  const response = await CredentialsService.SignUp(payload);
-  await _handleResponse(response);
+  let response = await CredentialsService.SignUp(payload);
 
   //It's god awful
-  if (response.statusCode === 200) {
+  if (response.statusCode === 201) {
     const userId = response.objects[0];
     const payload = {
       memberId: userId,
@@ -110,9 +125,20 @@ const onSignUpClick = async () => {
     };
     await PlaylistService.AddPlaylist(payload);
   }
+
+  await _handleResponse(response);
 };
 
 const onSignInClick = async () => {
+  if (emailInput.value.length === 0 || passwordInput.value.length === 0) {
+    alert('Credentials fields must not be empty.');
+    return;
+  }
+  if (passwordInput.value.length < minPasswordLength) {
+    alert(`Password must be ${ minPasswordLength } characters at minimum.`);
+    return;
+  }
+
   //This is also god awful
   const payload = {
     email: emailInput.value,

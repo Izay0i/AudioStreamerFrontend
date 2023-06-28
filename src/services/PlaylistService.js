@@ -7,17 +7,32 @@ export default {
     const response = await fetch(`${BASE_URL}/${name}`);
     return response.json();
   },
+  //abysmal naming scheme, who wrote this
+  //oh wait, it was me
+  //woe is me
   //how do you simulate a 's
   async GetUserPlaylists(id) {
     const response = await fetch(`${BASE_URL}/${name}/user/${id}`);
     return response.json();
   },
-  async GetUserPlaylistWithId(id) {
-    const response = await fetch(`${BASE_URL}/${name}/user/playlist/${id}`);
+  async GetUserPlaylistsByName(uId, pName) {
+    const response = await fetch(`${BASE_URL}/${name}/user/${uId}/playlists/${pName}`);
     return response.json();
   },
-  async GetPlaylistsByName(pName) {
+  async GetTracksFromPlaylist(id) {
+    const response = await fetch(`${BASE_URL}/${name}/tracks/${id}`);
+    return response.json();
+  },
+  async SearchPlaylists(pName) {
     const response = await fetch(`${BASE_URL}/${name}/${pName}`);
+    return response.json();
+  },
+  async GetPlaylistByIdFromUser(uId, pId) {
+    const response = await fetch(`${BASE_URL}/${name}/user/${uId}/playlist/id/${pId}`);
+    return response.json();
+  },
+  async GetPlaylistByNameFromUser(uId, pName) {
+    const response = await fetch(`${BASE_URL}/${name}/user/${uId}/playlist/name/${pName}`);
     return response.json();
   },
   async AddPlaylist(payload) {
@@ -42,18 +57,15 @@ export default {
     });
     return response.json();
   },
-  //abysmal naming, who wrote this
-  //oh wait, it was me
-  //woe is me
   async AddTrackToPlaylist(pId, tId) {
-    const response = await fetch(`${BASE_URL}/${name}/${name}/${pId}/add/track/${tId}`, {
+    const response = await fetch(`${BASE_URL}/${name}/${pId}/add/track/${tId}`, {
       method: 'PATCH',
       mode: 'cors',
     });
     return response.json();
   },
-  async AddTrackToPlaylist(pId, tId) {
-    const response = await fetch(`${BASE_URL}/${name}/${name}/${pId}/remove/track/${tId}`, {
+  async RemoveTrackFromPlaylist(pId, tId) {
+    const response = await fetch(`${BASE_URL}/${name}/${pId}/remove/track/${tId}`, {
       method: 'PATCH',
       mode: 'cors',
     });
