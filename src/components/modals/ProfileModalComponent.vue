@@ -42,19 +42,30 @@
       <!-- Blaming on the misfortune of your birth again I see -->
       <!-- Shut up Char -->
       <div style="display: flex; position: sticky; top: 0;">
-        <input type="text" class="search-input" placeholder="Search tracks" @keydown.enter="">
-        <button @click="">
+        <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search tracks" 
+        v-model="searchInput" 
+        @keydown.enter="onSearchTracks">
+
+        <button @click="onSearchTracks">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
           </svg>
         </button>
       </div>
-      <TrackItemComponent 
-      v-for="(track, index) in userTracks" 
-      :key="index" 
-      :data="track" 
-      @play="onTrackClick" 
-      @show-playlists="onPlaylistModalClick(track.trackId)" />
+      <template v-if="!isSearching">
+        <TrackItemComponent 
+        v-for="(track, index) in userTracks" 
+        :key="index" 
+        :data="track" 
+        @play="onTrackClick" 
+        @show-playlists="onPlaylistModalClick(track.trackId)" />
+      </template>
+      <template v-else>
+        <span class="empty-list-label">Please wait...</span>
+      </template>
     </div>
 
     <div class="section">
@@ -71,6 +82,7 @@ import { onMounted, ref, inject } from 'vue';
 import { computed } from '@vue/reactivity';
 import { maxDisplayNameLength, minNameLength, minPasswordLength } from '../../constants/NumericConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
+import { SearchTracks } from '../../functions/SearchHelper.js';
 import CredentialsService from '../../services/CredentialsService.js';
 import MemberService from '../../services/MemberSevice.js';
 import FollowerService from '../../services/FollowerService.js';
@@ -100,9 +112,11 @@ const { onTrackClick, onPlaylistModalClick } = inject('track');
 const mainUserId = ref(0);
 const isMainUser = ref(false);
 const isFollowing = ref(false);
+const isSearching = ref(false);
 const userData = ref(new Member());
 const userAvatar = ref(noSignal);
 const userTracks = ref([]);
+const copyOfUserTracks = ref([]);
 const userFollowingList = ref([]);
 
 //inputs
@@ -110,6 +124,7 @@ const imageFileInput = ref(null);
 const currentPassInput = ref('');
 const newPassInput = ref('');
 const renewPassInput = ref('');
+const searchInput = ref('');
 
 const emit = defineEmits(['close-modal-top-level']);
 
@@ -137,6 +152,7 @@ const _getUserData = async () => {
 
 const _getTracks = async () => {
   userTracks.value = await TrackService.GetTracksFromUserId(userData.value.memberId);
+  copyOfUserTracks.value = userTracks.value;
 };
 
 //No idea why the path is encoded(?)
@@ -233,6 +249,18 @@ const onSaveCredentials = async () => {
   await _getAvatar();
 };
 
+const onSearchTracks = async () => {
+  if (!!searchInput.value) {
+    isSearching.value = true;
+    userTracks.value = await SearchTracks(userTracks.value, searchInput.value.trim());
+    isSearching.value = false;
+    userTracks.value = userTracks.value.length !== 0 ? userTracks.value : copyOfUserTracks.value;
+  }
+  else {
+    userTracks.value = copyOfUserTracks.value;
+  }
+};
+
 const onSaveBiography = async () => {
   const payload = {
     email: userData.value.email,
@@ -323,5 +351,13 @@ const onModalClose = (value) => {
   background-color: black;
   border-style: double;
   border-width: 6px;
+}
+
+.empty-list-label {
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
 }
 </style>

@@ -55,9 +55,15 @@
       </div>
       
       <div class="section" style="overflow-y: auto;">
-        <template v-if="items?.length">
+        <template v-if="areItemsPopulated">
           <div style="display: flex; position: sticky; top: 0;">
-            <input type="text" class="search-input" placeholder="Search items" v-model="searchInput" @keydown.enter="onSearchItems">
+            <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search items" 
+            v-model="searchInput" 
+            @keydown.enter="onSearchItems">
+            
             <button @click="onSearchItems">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
@@ -251,6 +257,7 @@ const items = ref([]);
 const copyOfItems = ref([]);
 const recommendedItems = ref([]);
 const componentType = shallowRef(TrackItemComponent);
+const areItemsPopulated = ref(false);
 //
 const tracksOfTheDay = ref([]);
 const closedCaption = ref([]);
@@ -327,6 +334,7 @@ watch(refreshFeed, async (value) => {
     break;
   }
 
+  areItemsPopulated.value = items.value.length > 0;
   refreshFeed.value = false;
 });
 
@@ -552,6 +560,7 @@ const _listItems = [
     render: shallowRef(true), 
     func: async () => { 
       items.value = await _getTracks();
+      areItemsPopulated.value = items.value.length > 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemComponent;
     } 
@@ -564,6 +573,7 @@ const _listItems = [
       items.value = await _getTracksFromFollowings(userId.value);
       copyOfItems.value = items.value;
       recommendedItems.value = await _getRecommendedTracks(userId.value, maxRecommendedItems);
+      areItemsPopulated.value = items.value.length > 0 || recommendedItems.value.length > 0;
       componentType.value = TrackItemComponent;
     } 
   }, 
@@ -573,6 +583,7 @@ const _listItems = [
     render: isLoggedIn, 
     func: async () => {
       items.value = await _getUserTracks(userId.value);
+      areItemsPopulated.value = items.value.length > 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
     }
@@ -583,6 +594,7 @@ const _listItems = [
     render: isLoggedIn, 
     func: async () => {
       items.value = await _getUserPlaylists(userId.value);
+      areItemsPopulated.value = items.value.length > 0;
       copyOfItems.value = items.value;
       componentType.value = PlaylistItemExpandableEditableComponent;
     }
@@ -593,6 +605,7 @@ const _listItems = [
     render: shallowRef(true), 
     func: async () => { 
       items.value = await _getStorageTracks();
+      areItemsPopulated.value = items.value.length > 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
     }
