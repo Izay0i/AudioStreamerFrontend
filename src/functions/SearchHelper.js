@@ -8,23 +8,19 @@ export const SearchPlaylists = (items, keyword) => {
     .includes(keyword.toLocaleLowerCase()));
 };
 
-export const SearchTracks = async (items, keyword, offline = false) => {
+export const SearchTracks = async (items, keyword) => {
   if (typeof items !== 'object') {
     return;
   }
   
   let filteredResults = [];
-  if (!offline) {
-    filteredResults = filteredResults
-      .concat(await SearchByCaptions(items, keyword));
-  }
   filteredResults = filteredResults
+    .concat(await SearchByCaptions(items, keyword))
     .concat(SearchByName(items, keyword))
     .concat(SearchByArtist(items, keyword))
     .concat(SearchByDescription(items, keyword))
     .concat(SearchByTags(items, keyword));
   filteredResults = Array.from(new Set(filteredResults));
-  //console.log(filteredResults);
   return filteredResults;
 };
 
@@ -80,8 +76,18 @@ const SearchByCaptions = async (items, keyword) => {
   
   for (const item of items) {
     trackIds.push(item.trackId);
-    const response = await CaptionService.GetCaptionsByTrackId(item.trackId);
-    response.statusCode === 200 && captionObjects.push(response.objects[0]);
+    if (item.offline) {
+      item.captions !== '[]' && captionObjects.push({
+        trackId: item.trackId,
+        captions: item.captions,
+      });
+    }
+    else {
+      if (item.hasCaptions && item.captionsLength !== 0) {
+        const response = await CaptionService.GetCaptionsByTrackId(item.trackId);
+        captionObjects.push(response.objects[0]);
+      }
+    }
   }
 
   captionObjects.forEach(obj => {

@@ -275,6 +275,7 @@ const selectedTrackUserAvatar = ref(noSignal);
 const editTrackData = ref(null);
 const refreshFeed = ref(false);
 const searchInput = ref('');
+const isDownloading = ref(false);
 
 const currentIndex = ref(-1);
 const playlistLength = ref(0);
@@ -291,11 +292,12 @@ const showUploadTrackModal = ref(false);
 const showWelcomeModal = ref(false);
 const showAboutModal = ref(false);
 
-watch(selectedTrack, async (value) => {
-  if (!!value) {
-    if (value.offline) {
-      selectedTrack.value.thumbnail = URL.createObjectURL(value.thumbnail);
-      url.value = URL.createObjectURL(value.url);
+watch(selectedTrack, async (track) => {
+  if (!!track) {
+    if (track.offline) {
+      selectedTrack.value.thumbnail = track.thumbnail instanceof Blob ? 
+        URL.createObjectURL(track.thumbnail) : track.thumbnail;
+      url.value = URL.createObjectURL(track.url);
       return;
     }
 
@@ -308,7 +310,7 @@ watch(selectedTrack, async (value) => {
     };
     selectedTrackUserAvatar.value = URL.createObjectURL(await MediaService.GetMedia(payload));
     //GetMedia returns a blob which renders readable stream useless unless the network setting is set to no throttling
-    url.value = MediaService.GetMediaStream(value.url, 'media', 'audio/mpeg');
+    url.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
   }
 });
 
@@ -334,7 +336,7 @@ watch(refreshFeed, async (value) => {
     break;
   }
 
-  areItemsPopulated.value = items.value.length > 0;
+  areItemsPopulated.value = items.value.length !== 0;
   refreshFeed.value = false;
 });
 
@@ -377,6 +379,22 @@ const _retrieveStats = async () => {
 
   await StatsService.UpdateStats(payload);
   await TrackService.IncreaseViewCount(trackId);
+};
+
+const _retrieveCaptions = async () => {
+  if (selectedTrack.value.offline) {
+    closedCaption.value = JSON.parse(selectedTrack.value.captions);
+    return;
+  }
+
+  let captions = [];
+  const hasCaptions = selectedTrack.value.hasCaptions;
+  const captionsLength = selectedTrack.value.captionsLength;
+  if (hasCaptions && captionsLength !== 0) {
+    const response = await CaptionService.GetCaptionsByTrackId(selectedTrack.value.trackId);
+    captions = JSON.parse(response.objects[0].captions);
+  }
+  closedCaption.value = captions;
 };
 
 const _getTracks = async () => {
@@ -442,9 +460,6 @@ const onSearchItems = async () => {
       case 'my_playlists':
         items.value = SearchPlaylists(copyOfItems.value, searchInput.value.trim());
       break;
-      case 'storage':
-        items.value = await SearchTracks(copyOfItems.value, searchInput.value.trim(), true);
-      break;
       default:
         showLoadingText.value = true;
         items.value = await SearchTracks(copyOfItems.value, searchInput.value.trim());
@@ -466,13 +481,10 @@ const onTrackClick = async (track) => {
   if (selectedTrack.value === track) {
     return;
   }
+
   selectedTrack.value = track;
-  if (selectedTrack.value.offline) {
-    return;
-  }
+  await _retrieveCaptions();
   await _retrieveStats();
-  const response = await CaptionService.GetCaptionsByTrackId(selectedTrack.value.trackId);
-  closedCaption.value = !!response.objects ? JSON.parse(response.objects[0].captions) : [];
 };
 
 const onStartPlaylistClick = async (value) => {
@@ -483,17 +495,26 @@ const onStartPlaylistClick = async (value) => {
 };
 
 const onDownloadTrackClick = async () => {
-  if (!(!!selectedTrack.value && !!selectedTrack.value.trackId && !selectedTrack.value.offline)) {
+  if (!(!!selectedTrack.value && 
+    !!selectedTrack.value.trackId && 
+    !selectedTrack.value.offline)) 
+  {
     return;
   }
 
   const currentTrack = selectedTrack.value;
+  if (isDownloading.value) {
+    alert(`Download for ${currentTrack.trackName} is in progress, please wait.`);
+    return;
+  }
+  
   const found = await FindTrack({ trackId: currentTrack.trackId, });
   if (found) {
     console.log(`Found track with id: ${currentTrack.trackId}. Process terminated.`);
     return;
   }
 
+  isDownloading.value = true;
   let payload = {
     src: currentTrack.url,
     containerName: 'media',
@@ -508,14 +529,21 @@ const onDownloadTrackClick = async () => {
   };
   const thumbnailBlob = await MediaService.GetMedia(payload);
   
+  let captions = "[]";
+  if (currentTrack.hasCaptions && currentTrack.captionsLength !== 0) {
+    const response = await CaptionService.GetCaptionsByTrackId(currentTrack.trackId);
+    captions = response.objects[0].captions;
+  }
   payload = { 
-    ...toRaw(currentTrack), 
-    url: trackBlob, 
-    thumbnail: thumbnailBlob, 
-    offline: true, 
+    ...toRaw(currentTrack),
+    url: trackBlob,
+    thumbnail: thumbnailBlob,
+    offline: true,
+    captions,
   };
   const saved = await SaveTrack(payload);
   saved && alert(`Saved ${payload.trackName} to storage.`);
+  isDownloading.value = false;
 };
 
 const onEditTrackClick = (track) => {
@@ -560,7 +588,7 @@ const _listItems = [
     render: shallowRef(true), 
     func: async () => { 
       items.value = await _getTracks();
-      areItemsPopulated.value = items.value.length > 0;
+      areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemComponent;
     } 
@@ -573,7 +601,7 @@ const _listItems = [
       items.value = await _getTracksFromFollowings(userId.value);
       copyOfItems.value = items.value;
       recommendedItems.value = await _getRecommendedTracks(userId.value, maxRecommendedItems);
-      areItemsPopulated.value = items.value.length > 0 || recommendedItems.value.length > 0;
+      areItemsPopulated.value = items.value.length !== 0 || recommendedItems.value.length !== 0;
       componentType.value = TrackItemComponent;
     } 
   }, 
@@ -583,7 +611,7 @@ const _listItems = [
     render: isLoggedIn, 
     func: async () => {
       items.value = await _getUserTracks(userId.value);
-      areItemsPopulated.value = items.value.length > 0;
+      areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
     }
@@ -594,7 +622,7 @@ const _listItems = [
     render: isLoggedIn, 
     func: async () => {
       items.value = await _getUserPlaylists(userId.value);
-      areItemsPopulated.value = items.value.length > 0;
+      areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = PlaylistItemExpandableEditableComponent;
     }
@@ -605,7 +633,7 @@ const _listItems = [
     render: shallowRef(true), 
     func: async () => { 
       items.value = await _getStorageTracks();
-      areItemsPopulated.value = items.value.length > 0;
+      areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
     }

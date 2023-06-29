@@ -93,7 +93,7 @@ const onRemoveClick = () => {
 }
 
 .buttons > button:nth-of-type(3) {
-  background-color: darkred;
+  background-color: red;
   color: white;
 }
 </style>

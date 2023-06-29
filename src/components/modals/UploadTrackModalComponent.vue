@@ -118,9 +118,13 @@ onMounted(async () => {
     trackUrl.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
 
     //fetch closed captions/subtitles
-    const response = await CaptionService.GetCaptionsByTrackId(track.trackId);
-    hasCaptions.value = !!response.objects;
-    captions.value = !!response.objects ? JSON.parse(response.objects[0].captions) : [];
+    hasCaptions.value = track.hasCaptions;
+    let obj = [];
+    if (hasCaptions.value && track.captionsLength !== 0) {
+      const response = await CaptionService.GetCaptionsByTrackId(track.trackId);
+      obj = JSON.parse(response.objects[0].captions);
+    }
+    captions.value = obj;
   }
 });
 
@@ -213,17 +217,19 @@ const onSaveChangesClick = async () => {
   let response;
   let thumbnailFilePath = '';
   
+  const track = props.track;
+
   if (!!thumbnailFileInput.value) {
-    if (!!props.track.thumbnail) {
+    if (!!track.thumbnail) {
       payload = {
-        url: props.track.thumbnail,
+        url: track.thumbnail,
         containerName: 'thumbnail',
       };
       await MediaService.DeleteMedia(payload);
     }
 
     payload = {
-      memberId: props.track.trackId,
+      memberId: track.trackId,
       containerName: 'thumbnail',
       file: thumbnailFileInput.value, 
     };
@@ -232,12 +238,14 @@ const onSaveChangesClick = async () => {
   }
 
   payload = {
-    trackId: props.track.trackId,
+    trackId: track.trackId,
     trackName: trackInputValue.value,
     artistName: artistInputValue.value,
     description: desInputValue.value,
-    thumbnail: !!thumbnailFilePath ? thumbnailFilePath : props.track.thumbnail,
+    thumbnail: !!thumbnailFilePath ? thumbnailFilePath : track.thumbnail,
     tags: !!tagsInputValue.value ? _convertTagsToArray() : [],
+    hasCaptions: track.hasCaptions,
+    captionsLength: track.captionsLength,
   };
 
   response = await TrackService.UpdateTrack(payload);
@@ -314,13 +322,16 @@ const onSaveCaptionsClick = async () => {
   let response;
   let captionId;
   let payload = {};
+
+  const track = props.track;
+
   if (hasCaptions.value) {
     response = await CaptionService.GetCaptionsByTrackId(props.track.trackId);
     captionId = response.objects[0].captionId;
   }
   else {
     payload = {
-      trackId: props.track.trackId,
+      trackId: track.trackId,
     };
     response = await CaptionService.AddCaptions(payload);
     if (response.statusCode === 201) {
@@ -335,6 +346,17 @@ const onSaveCaptionsClick = async () => {
   };
   response = await CaptionService.UpdateCaptions(payload);
   response.statusCode === 200 && notifyRefreshFeed();
+  
+  //Update tracks
+  payload = {
+    trackId: track.trackId,
+    trackName: track.trackName,
+    artistName: track.artistName,
+    hasCaptions: hasCaptions.value,
+    captionsLength: captions.value.length,
+  };
+  await TrackService.UpdateTrack(payload);
+  //
   alert(response.message);
 };
 

@@ -8,6 +8,8 @@ export default class Track {
     url, 
     thumbnail, 
     tags, 
+    hasCaptions, 
+    captionsLength, 
     dateCreated) 
   {
     this.trackId = trackId;
@@ -18,6 +20,8 @@ export default class Track {
     this.url = url;
     this.thumbnail = thumbnail;
     this.tags = tags;
+    this.hasCaptions = hasCaptions;
+    this.captionsLength = captionsLength;
     this.dateCreated = dateCreated;
   }
 }
