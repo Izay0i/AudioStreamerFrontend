@@ -70,7 +70,11 @@
 
     <div class="section">
       <div class="info-section">
-        <textarea :readonly="!isMainUser" class="info" v-model="userData.biography"></textarea>
+        <textarea 
+        placeholder="Write something about yourself" 
+        :readonly="!isMainUser" 
+        class="info" 
+        v-model="userData.biography"></textarea>
         <button style="margin-top: 4px;" v-if="isMainUser" @click="onSaveBiography">Save changes</button>
       </div>
     </div>
@@ -80,7 +84,10 @@
 <script setup>
 import { onMounted, ref, inject } from 'vue';
 import { computed } from '@vue/reactivity';
+import { useRouter } from 'vue-router';
+import { credentialsRouteName } from '../../constants/RouteConstants.js';
 import { maxDisplayNameLength, minNameLength, minPasswordLength } from '../../constants/NumericConstants.js';
+import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import { SearchTracks } from '../../functions/SearchHelper.js';
 import CredentialsService from '../../services/CredentialsService.js';
@@ -107,7 +114,9 @@ onMounted(async () => {
   }
 });
 
-const { onTrackClick, onPlaylistModalClick } = inject('track');
+const router = useRouter();
+
+const { loadingWrapper, onTrackClick, onPlaylistModalClick } = inject('track');
 
 const mainUserId = ref(0);
 const isMainUser = ref(false);
@@ -140,9 +149,7 @@ const localeDate = computed(() => {
 });
 
 const _handleResponse = async (response) => {
-  if (response.statusCode === 200) {
-    await _getFollowingList();
-  }
+  response.statusCode === Status.Ok && await _getFollowingList();
 };
 
 const _getUserData = async () => {
@@ -151,7 +158,7 @@ const _getUserData = async () => {
 };
 
 const _getTracks = async () => {
-  userTracks.value = await TrackService.GetTracksFromUserId(userData.value.memberId);
+  userTracks.value = await loadingWrapper(TrackService.GetTracksFromUserId(userData.value.memberId), isSearching);
   copyOfUserTracks.value = userTracks.value;
 };
 
@@ -160,9 +167,8 @@ const _getTracks = async () => {
 //wtf???
 const _getAvatar = async () => {
   await _getUserData();
-  const inlineImg = 'data:image/*;base64,' + btoa(noSignal);
-  userAvatar.value = !!userData.value.avatar && userData.value.avatar !== '' ? 
-    MediaService.GetMediaStream(userData.value.avatar, 'avatar', 'image/*') : inlineImg;
+  userAvatar.value = userData.value.avatar !== '' ? 
+    MediaService.GetMediaStream(userData.value.avatar, 'avatar', 'image/*') : noSignal;
 };
 
 const _getFollowingList = async () => {
@@ -251,9 +257,7 @@ const onSaveCredentials = async () => {
 
 const onSearchTracks = async () => {
   if (!!searchInput.value) {
-    isSearching.value = true;
-    userTracks.value = await SearchTracks(userTracks.value, searchInput.value.trim());
-    isSearching.value = false;
+    userTracks.value = await loadingWrapper(SearchTracks(userTracks.value, searchInput.value.trim()), isSearching);
     userTracks.value = userTracks.value.length !== 0 ? userTracks.value : copyOfUserTracks.value;
   }
   else {
@@ -273,6 +277,7 @@ const onSaveBiography = async () => {
 
 const onFollowUser = async () => {
   if (!(!!mainUserId.value)) {
+    router.push(credentialsRouteName);
     return;
   }
 
@@ -282,6 +287,7 @@ const onFollowUser = async () => {
 
 const onUnfollowUser = async () => {
   if (!(!!mainUserId.value)) {
+    router.push(credentialsRouteName);
     return;
   }
 

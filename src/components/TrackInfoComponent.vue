@@ -38,8 +38,11 @@
 <script setup>
 import { onUpdated } from 'vue';
 import { computed, ref } from '@vue/reactivity';
+import { useRouter } from 'vue-router';
+import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { defaultRatingValue } from '../constants/NumericConstants.js';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
+import { Status } from '../constants/StatusConstants.js';
 import { EncodeMedia } from '../functions/MediaHelper.js';
 import { GetCredentials } from '../functions/StorageHelper.js';
 import StatsService from '../services/StatsService.js';
@@ -55,9 +58,13 @@ onUpdated(async () => {
   userId.value = await GetCredentials();
   trackId.value = !!infoProps.trackData ? infoProps.trackData.trackId : 0;
 
-  const response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId.value);
-  rating.value = response.statusCode === 200 ? response.objects[0].rating : 0;
+  if (!!userId.value) {
+    const response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId.value);
+    rating.value = response.statusCode === Status.Ok ? response.objects[0].rating : 0;
+  }
 });
+
+const router = useRouter();
 
 const userId = ref(null);
 const trackId = ref(null);
@@ -90,7 +97,7 @@ const _handleStats = async () => {
     };
 
     response = await StatsService.UpdateStats(payload);
-    if (response.statusCode === 200) {
+    if (response.statusCode === Status.Ok) {
       rating.value = response.objects[0].rating;
     }
   }
@@ -98,6 +105,7 @@ const _handleStats = async () => {
 
 const onRate = async () => {
   if (!(!!infoProps.trackData && !infoProps.trackData.offline && !!userId.value)) {
+    router.push(credentialsRouteName);
     return;
   }
 
@@ -107,7 +115,7 @@ const onRate = async () => {
   //else update rate
   await _handleStats();
   const response = await PlaylistService.GetPlaylistByNameFromUser(userId.value, fallbackPlaylistName);
-  if (response.statusCode === 200) {
+  if (response.statusCode === Status.Ok) {
     const playlist = response.objects[0];
     rating.value === defaultRatingValue ? 
       await PlaylistService.AddTrackToPlaylist(playlist.playlistId, trackId.value) : 
@@ -124,6 +132,7 @@ const onAvatarClick = () => {
 
 const onAddToPlaylist = () => {
   if (!(!!userId.value && !infoProps.trackData?.offline)) {
+    router.push(credentialsRouteName);
     return;
   }
   emit('show-playlists', infoProps.trackData.trackId);

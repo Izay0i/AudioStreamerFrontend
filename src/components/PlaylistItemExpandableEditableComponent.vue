@@ -54,6 +54,7 @@
 import { ref, watch, inject } from 'vue';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
 import { maxNameLength, minNameLength } from '../constants/NumericConstants.js';
+import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials } from '../functions/StorageHelper.js';
 import TrackItemComponent from './TrackItemComponent.vue';
 import PlaylistService from '../services/PlaylistService.js';
@@ -115,14 +116,14 @@ const onEditClick = async () => {
   };
   response = await PlaylistService.UpdatePlaylist(payload);
   alert(response.message);
-  if (response.statusCode === 200) {
+  if (response.statusCode === Status.Ok) {
     isEditable.value = false;
   }
 };
 
 const onDeleteClick = async () => {
   const response = await PlaylistService.DeletePlaylist(props.data.playlistId);
-  response.statusCode === 200 && notifyRefreshFeed();
+  response.statusCode === Status.Ok && notifyRefreshFeed();
   alert(response.message); 
 };
 

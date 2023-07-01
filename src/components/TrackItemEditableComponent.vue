@@ -44,7 +44,8 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue';
 import { maxVisibleStringLength } from '../constants/NumericConstants.js';
-import { GetCredentials, RemoveTrack } from '../functions/StorageHelper.js';
+import { Status } from '../constants/StatusConstants.js';
+import { RemoveTrack } from '../functions/StorageHelper.js';
 import TrackService from '../services/TrackService.js';
 import StatsService from '../services/StatsService.js';
 import MediaService from '../services/MediaService';
@@ -97,10 +98,6 @@ const onSelectTrack = () => {
 }
 
 const onSelectShowPlaylists = async () => {
-  const isLoggedIn = await GetCredentials() != null;
-  if (!isLoggedIn) {
-    return;
-  }
   emit('show-playlists', track.data.trackId);
 };
 
@@ -130,7 +127,7 @@ const onRemoveTrackClick = async () => {
   }
   
   response = await TrackService.DeleteTrack(track.data.trackId);
-  response.statusCode === 200 && notifyRefreshFeed();
+  response.statusCode === Status.Ok && notifyRefreshFeed();
   alert(response.message);
 };
 

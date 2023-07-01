@@ -6,7 +6,7 @@
     </div>
 
     <div class="side-profile">
-      <span @click="() => $router.push('credentials')" v-if="!isLoggedIn">Log In</span>
+      <span @click="() => router.push(credentialsRouteName)" v-if="!isLoggedIn">Log In</span>
       <template v-else>
         <span @click="onProfileModalClick">Profile</span>
         <span @click="onExitModalClick">Exit</span>
@@ -55,7 +55,7 @@
       </div>
       
       <div class="section" style="overflow-y: auto;">
-        <template v-if="areItemsPopulated">
+        <template v-if="areItemsPopulated || showLoadingText">
           <div style="display: flex; position: sticky; top: 0;">
             <input 
             type="text" 
@@ -73,7 +73,7 @@
           
           <template v-if="defaultDir === 'discover'">
             <div style="margin-top: 4px; display: flex; flex-direction: column; height: 100%;">
-              <div style="overflow-y: auto;">
+              <div style="flex: 1;">
                 <span class="discover-label">Recommended:</span>
                 <template v-for="recommendedItem in recommendedItems" :key="recommendedItem">
                   <component 
@@ -85,8 +85,8 @@
                   @play-tracks="onStartPlaylistClick" />
                 </template>
               </div>
-              <div style="flex: 2; overflow-y: auto;">
-                <span class="discover-label" style="position: sticky; top: 0;">
+              <div style="flex: 2;">
+                <span class="discover-label">
                   From people you're following:
                 </span>
                 <template v-if="showLoadingText">
@@ -139,7 +139,10 @@
         </div>
 
         <div style="flex: 1;" class="audio-section">
-          <textarea readonly class="info" style="margin-left: 0; flex: 1; text-align-last: center;">{{ currentCaption }}</textarea>
+          <textarea 
+          readonly 
+          class="info" 
+          style="margin-left: 0; flex: 1; text-align-last: center;">{{ currentCaption }}</textarea>
           
           <div class="audio">
             <audio 
@@ -217,7 +220,10 @@
 <script setup>
 //This is not kino
 import { shallowRef, ref, onMounted, watch, provide, toRaw, readonly } from 'vue';
+import { useRouter } from 'vue-router';
+import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { maxItemsInTopList, maxRecommendedItems } from '../constants/NumericConstants.js';
+import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
 import { SearchPlaylists, SearchTracks } from '../functions/SearchHelper.js';
 
@@ -249,6 +255,8 @@ onMounted(async () => {
   isLoggedIn.value = !!userId.value;
   await _getTracksWithTheMostViewsOfTheDay();
 });
+
+const router = useRouter();
 
 const audio = ref(null);
 //dealing with dynamic components now
@@ -309,7 +317,7 @@ watch(selectedTrack, async (track) => {
       contentType: 'image/*',
     };
     selectedTrackUserAvatar.value = URL.createObjectURL(await MediaService.GetMedia(payload));
-    //GetMedia returns a blob which renders readable stream useless unless the network setting is set to no throttling
+    //GetMedia returns a blob, on slower network could it might be a bit problematic
     url.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
   }
 });
@@ -354,15 +362,11 @@ watch(currentIndex, async (index) => {
 });
 
 const _retrieveStats = async () => {
-  if (!isLoggedIn.value) {
-    return;
-  }
-
   const trackId = selectedTrack.value.trackId;
   
   let payload = {};
   let response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId);
-  if (response.statusCode !== 200) {
+  if (response.statusCode !== Status.Ok) {
     payload = {
       memberId: userId.value,
       trackId,
@@ -398,7 +402,7 @@ const _retrieveCaptions = async () => {
 };
 
 const _getTracks = async () => {
-  return await TrackService.GetTracks();
+  return await loadingWrapper(TrackService.GetTracks());
 };
 
 const _getTracksWithTheMostViewsOfTheDay = async () => {
@@ -406,23 +410,30 @@ const _getTracksWithTheMostViewsOfTheDay = async () => {
 };
 
 const _getRecommendedTracks = async (userId, limit) => {
-  return await PredictService.GetRecommendedItems(userId, limit);
+  return await loadingWrapper(PredictService.GetRecommendedItems(userId, limit));
 };
 
 const _getTracksFromFollowings = async (userId) => {
-  return await FollowerService.GetTracksFromFollowings(userId);
+  return await loadingWrapper(FollowerService.GetTracksFromFollowings(userId));
 };
 
 const _getUserTracks = async (userId) => {
-  return await TrackService.GetTracksFromUserId(userId);
+  return await loadingWrapper(TrackService.GetTracksFromUserId(userId));
 };
 
 const _getUserPlaylists = async (userId) => {
-  return await PlaylistService.GetUserPlaylists(userId);
+  return await loadingWrapper(PlaylistService.GetUserPlaylists(userId));
 };
 
 const _getStorageTracks = async () => {
-  return await GetTracks();
+  return await loadingWrapper(GetTracks());
+};
+
+const loadingWrapper = async (promise, condition = showLoadingText) => {
+  condition.value = true;
+  const result = await promise;
+  condition.value = false;
+  return result;
 };
 
 const setCurrentIndex = (value) => {
@@ -461,9 +472,7 @@ const onSearchItems = async () => {
         items.value = SearchPlaylists(copyOfItems.value, searchInput.value.trim());
       break;
       default:
-        showLoadingText.value = true;
-        items.value = await SearchTracks(copyOfItems.value, searchInput.value.trim());
-        showLoadingText.value = false;
+        items.value = await loadingWrapper(SearchTracks(copyOfItems.value, searchInput.value.trim()));
     }
     items.value = items.value.length !== 0 ? items.value : copyOfItems.value;
   }
@@ -484,7 +493,7 @@ const onTrackClick = async (track) => {
 
   selectedTrack.value = track;
   await _retrieveCaptions();
-  await _retrieveStats();
+  isLoggedIn.value && await _retrieveStats();
 };
 
 const onStartPlaylistClick = async (value) => {
@@ -511,6 +520,7 @@ const onDownloadTrackClick = async () => {
   const found = await FindTrack({ trackId: currentTrack.trackId, });
   if (found) {
     console.log(`Found track with id: ${currentTrack.trackId}. Process terminated.`);
+    alert('Track already downloaded.');
     return;
   }
 
@@ -566,7 +576,13 @@ const onPlaylistModalClick = (value) => {
 };
 const onClosePlaylistModalClick = (value) => showPlaylistsModal.value = value;
 
-const onCurrentPlaylistModalClick = () => showCurrentPlaylistModal.value = true;
+const onCurrentPlaylistModalClick = () => {
+  if (!isLoggedIn.value) {
+    router.push(credentialsRouteName);
+    return;
+  }
+  showCurrentPlaylistModal.value = true
+};
 const onCloseCurrentPlaylistModalClick = (value) => showCurrentPlaylistModal.value = value;
 
 const onUploadTrackModalClick = () => showUploadTrackModal.value = true;
@@ -655,6 +671,7 @@ const _listItems = [
 provide('track-readonly', readonly(currentIndex));
 
 provide('track', {
+  loadingWrapper,
   notifyRefreshFeed, 
   onTrackClick, 
   onPlaylistModalClick, 

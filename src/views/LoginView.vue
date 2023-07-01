@@ -43,9 +43,13 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { mainRouteName } from '../constants/RouteConstants.js';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
 import { minNameLength, maxDisplayNameLength, minPasswordLength } from '../constants/NumericConstants.js';
 import { SaveCredentials } from '../functions/StorageHelper.js';
+
+import { Status } from '../constants/StatusConstants.js';
+
 import BGSong from '../assets/music/background_music.mp3';
 import CredentialsService from '../services/CredentialsService.js';
 import PlaylistService from '../services/PlaylistService.js';
@@ -66,13 +70,13 @@ const router = useRouter();
 const _listItems = [
   { title: 'sign_in', icon: 'folder', func: () => {} }, 
   { title: 'register', icon: 'folder', func: () => {} }, 
-  { title: 'main', icon: 'folder', func: () => router.push('main') }, 
+  { title: 'main', icon: 'folder', func: () => router.push(mainRouteName) }, 
 ];
 
 const _handleResponse = async (response) => {
-  if (response.statusCode === 200 || response.statusCode === 201) {
+  if (response.statusCode === Status.Ok || response.statusCode === Status.Created) {
     await SaveCredentials(response.objects[0]);
-    router.push('main');
+    router.push(mainRouteName);
   }
   else {
     alert(response.message);
@@ -117,7 +121,7 @@ const onSignUpClick = async () => {
   let response = await CredentialsService.SignUp(payload);
 
   //It's god awful
-  if (response.statusCode === 201) {
+  if (response.statusCode === Status.Created) {
     const userId = response.objects[0];
     const payload = {
       memberId: userId,

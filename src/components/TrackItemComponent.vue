@@ -35,9 +35,13 @@
 
 <script setup>
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { maxVisibleStringLength } from '../constants/NumericConstants.js';
 import { GetCredentials } from '../functions/StorageHelper.js';
 import { fallbackPlaylistName } from '../constants/StringConstants';
+
+const router = useRouter();
 
 defineOptions({
   inheritAttrs: false,
@@ -87,6 +91,7 @@ const onSelectTrack = () => {
 const onSelectShowPlaylists = async () => {
   const isLoggedIn = !!await GetCredentials();
   if (!isLoggedIn) {
+    router.push(credentialsRouteName);
     return;
   }
   emit('show-playlists', track.data.trackId);

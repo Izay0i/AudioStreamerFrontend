@@ -30,6 +30,7 @@
 import { onMounted, ref } from 'vue';
 import { fallbackPlaylistName } from '../../constants/StringConstants.js';
 import { minNameLength, maxNameLength } from '../../constants/NumericConstants.js';
+import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import ModalComponent from './ModalComponent.vue';
 import PlaylistItemComponent from '../PlaylistItemComponent.vue';
@@ -70,7 +71,7 @@ const onCreatePlaylistClick = async () => {
   }
 
   let response = await PlaylistService.GetPlaylistByNameFromUser(userId.value, searchValue);
-  if (response.statusCode === 200) {
+  if (response.statusCode === Status.Ok) {
     alert(`Playlist with the name ${searchValue} already exists.`);
   }
   else {
@@ -79,7 +80,7 @@ const onCreatePlaylistClick = async () => {
       name: searchValue,
     };
     response = await PlaylistService.AddPlaylist(payload);
-    if (response.statusCode === 201) {
+    if (response.statusCode === Status.Created) {
       searchInput.value = '';
       const playlistId = response.objects[0];
       await onAddToPlaylistClick(playlistId);

@@ -92,6 +92,7 @@
 <script setup>
 import { ref, onMounted, watch, inject } from 'vue';
 import { minNameLength, maxNameLength } from '../../constants/NumericConstants.js';
+import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import Caption from '../../objects/Caption.js';
 import TrackService from '../../services/TrackService.js';
@@ -249,7 +250,7 @@ const onSaveChangesClick = async () => {
   };
 
   response = await TrackService.UpdateTrack(payload);
-  response.statusCode === 200 && notifyRefreshFeed();
+  response.statusCode === Status.Ok && notifyRefreshFeed();
   alert(response.message);
 };
 
@@ -300,7 +301,7 @@ const onUploadClick = async () => {
   };
 
   response = await TrackService.AddTrack(payload);
-  response.statusCode === 201 && notifyRefreshFeed();
+  response.statusCode === Status.Created && notifyRefreshFeed();
   alert(response.message);
 };
 
@@ -334,7 +335,7 @@ const onSaveCaptionsClick = async () => {
       trackId: track.trackId,
     };
     response = await CaptionService.AddCaptions(payload);
-    if (response.statusCode === 201) {
+    if (response.statusCode === Status.Created) {
       captionId = response.objects[0];
       hasCaptions.value = true;
     }
@@ -345,7 +346,7 @@ const onSaveCaptionsClick = async () => {
     captions: JSON.stringify(captions.value),
   };
   response = await CaptionService.UpdateCaptions(payload);
-  response.statusCode === 200 && notifyRefreshFeed();
+  response.statusCode === Status.Ok && notifyRefreshFeed();
   
   //Update tracks
   payload = {
