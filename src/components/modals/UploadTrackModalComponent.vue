@@ -91,7 +91,7 @@
 
 <script setup>
 import { ref, onMounted, watch, inject } from 'vue';
-import { minNameLength, maxNameLength } from '../../constants/NumericConstants.js';
+import { minNameLength, maxNameLength, maxFileSize, oneMegaByte } from '../../constants/NumericConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import Caption from '../../objects/Caption.js';
@@ -149,6 +149,8 @@ const tagsInputValue = ref('');
 
 const trackFileInput = ref(null);
 const thumbnailFileInput = ref(null);
+
+const maxUploadSize = Math.floor(maxFileSize / oneMegaByte);
 
 const props = defineProps({
   track: {
@@ -221,21 +223,25 @@ const onSaveChangesClick = async () => {
   const track = props.track;
 
   if (!!thumbnailFileInput.value) {
-    if (!!track.thumbnail) {
+    if (thumbnailFileInput.value.size <= maxFileSize) {
+      if (!!track.thumbnail) {
+        payload = {
+          url: track.thumbnail,
+          containerName: 'thumbnail',
+        };
+        await MediaService.DeleteMedia(payload);
+      }
       payload = {
-        url: track.thumbnail,
+        memberId: track.trackId,
         containerName: 'thumbnail',
+        file: thumbnailFileInput.value, 
       };
-      await MediaService.DeleteMedia(payload);
+      response = await MediaService.UploadMedia(payload);
+      thumbnailFilePath = response.objects[0];
     }
-
-    payload = {
-      memberId: track.trackId,
-      containerName: 'thumbnail',
-      file: thumbnailFileInput.value, 
-    };
-    response = await MediaService.UploadMedia(payload);
-    thumbnailFilePath = response.objects[0];
+    else {
+      alert(`Thumbnail size must not exceed ${maxUploadSize}MB.`);
+    }
   }
 
   payload = {
@@ -268,6 +274,11 @@ const onUploadClick = async () => {
     alert(`Where's your file?`);
     return;
   }
+  if (trackFileInput.value.size > maxFileSize) {
+    console.log(trackFileInput.value.size);
+    alert(`File size must not exceed ${maxUploadSize}MB.`);
+    return;
+  }
 
   const userId = await GetCredentials();
 
@@ -281,13 +292,18 @@ const onUploadClick = async () => {
 
   let thumbnailFilePath = '';
   if (!!thumbnailFileInput.value) {
-    payload = {
-      memberId: userId,
-      containerName: 'thumbnail',
-      file: thumbnailFileInput.value, 
-    };
-    response = await MediaService.UploadMedia(payload);
-    thumbnailFilePath = response.objects[0];
+    if (thumbnailFileInput.value.size <= maxFileSize) {
+      payload = {
+        memberId: userId,
+        containerName: 'thumbnail',
+        file: thumbnailFileInput.value, 
+      };
+      response = await MediaService.UploadMedia(payload);
+      thumbnailFilePath = response.objects[0];
+    }
+    else {
+      alert(`Thumbnail size must not exceed ${maxUploadSize}MB.`);
+    }
   }
 
   payload = {

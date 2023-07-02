@@ -317,7 +317,7 @@ watch(selectedTrack, async (track) => {
       contentType: 'image/*',
     };
     selectedTrackUserAvatar.value = URL.createObjectURL(await MediaService.GetMedia(payload));
-    //GetMedia returns a blob, on slower network could it might be a bit problematic
+    //GetMedia returns a blob, on slower network it can be a bit problematic
     url.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
   }
 });

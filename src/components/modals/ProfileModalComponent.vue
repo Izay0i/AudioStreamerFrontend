@@ -71,7 +71,7 @@
     <div class="section">
       <div class="info-section">
         <textarea 
-        placeholder="Write something about yourself" 
+        :placeholder="isMainUser ? 'Write something about yourself' : ''" 
         :readonly="!isMainUser" 
         class="info" 
         v-model="userData.biography"></textarea>
@@ -86,7 +86,7 @@ import { onMounted, ref, inject } from 'vue';
 import { computed } from '@vue/reactivity';
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../../constants/RouteConstants.js';
-import { maxDisplayNameLength, minNameLength, minPasswordLength } from '../../constants/NumericConstants.js';
+import { maxDisplayNameLength, minNameLength, minPasswordLength, maxFileSize, oneMegaByte } from '../../constants/NumericConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import { SearchTracks } from '../../functions/SearchHelper.js';
@@ -134,6 +134,8 @@ const currentPassInput = ref('');
 const newPassInput = ref('');
 const renewPassInput = ref('');
 const searchInput = ref('');
+
+const maxUploadSize = Math.floor(maxFileSize / oneMegaByte);
 
 const emit = defineEmits(['close-modal-top-level']);
 
@@ -225,23 +227,28 @@ const onSaveCredentials = async () => {
 
   let imageFilePath = userData.value.avatar;
   if (!!imageFileInput.value) {
-    if (!!userData.value.avatar) {
+    if (imageFileInput.value.size <= maxFileSize) {
+      if (!!userData.value.avatar) {
+        const imagePayload = {
+          url: userData.value.avatar,
+          containerName: 'avatar',
+        };
+
+        await MediaService.DeleteMedia(imagePayload);
+      }
+
       const imagePayload = {
-        url: userData.value.avatar,
+        memberId: mainUserId.value,
         containerName: 'avatar',
+        file: imageFileInput.value,
       };
 
-      await MediaService.DeleteMedia(imagePayload);
+      response = await MediaService.UploadMedia(imagePayload);
+      imageFilePath = response.objects[0];
     }
-
-    const imagePayload = {
-      memberId: mainUserId.value,
-      containerName: 'avatar',
-      file: imageFileInput.value,
-    };
-
-    response = await MediaService.UploadMedia(imagePayload);
-    imageFilePath = response.objects[0];
+    else {
+      alert(`File size must not exceed ${maxUploadSize}MB.`);
+    }
   }
 
   payload = {
