@@ -434,8 +434,7 @@ const onTranscribeClick = async () => {
   isTranscribing.value = true;
 
   captions.value = [];
-  const response = await MediaService.Transcribe(props.track.url, selectedLanguageInputValue.value);
-  captions.value = response.statusCode === Status.Ok ? response.objects[0] : [];
+  await MediaService.Transcribe(captions, props.track.url, selectedLanguageInputValue.value);
 
   isTranscribing.value = false;
   isDoneTranscribing.value = true;

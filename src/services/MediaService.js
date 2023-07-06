@@ -3,15 +3,27 @@ import { BASE_URL } from "../http-common";
 const name = 'media';
 
 export default {
-  async Transcribe(src, lang = 'en-US') {
+  async Transcribe(collection, src, lang = 'en-US') {
     const response = await fetch(`${BASE_URL}/${name}/transcribe?` + new URLSearchParams({
       src,
       lang,
-    }), {
-      method: 'GET',
-      mode: 'cors',
-    });
-    return response.json();
+    }));
+    const reader = response.body?.getReader();
+    if (!reader) {
+      return;
+    }
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      var item = decoder.decode(value).replace(/\[|]/g, '').replace(/^,/, '');
+      if (item.length > 0) {
+        collection.value.push(JSON.parse(item));
+      }
+    }
+    reader.releaseLock();
   },
   GetMediaStream(src, containerName, contentType) {
     return `${BASE_URL}/${name}?` + new URLSearchParams({
