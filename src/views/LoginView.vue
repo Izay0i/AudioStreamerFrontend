@@ -46,6 +46,7 @@ import { useRouter } from 'vue-router';
 import { mainRouteName } from '../constants/RouteConstants.js';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
 import { minNameLength, maxDisplayNameLength, minPasswordLength } from '../constants/NumericConstants.js';
+import { ValidateEmailAddress } from '../functions/InputHelper.js';
 import { SaveCredentials } from '../functions/StorageHelper.js';
 
 import { Status } from '../constants/StatusConstants.js';
@@ -98,6 +99,10 @@ const onSignUpClick = async () => {
     alert('Credentials fields must not be empty.');
     return;
   }
+  if (!ValidateEmailAddress(emailInput.value)) {
+    alert('Invalid email address.');
+    return;
+  }
   if (passwordInput.value.length < minPasswordLength || repassInput.value.length < minPasswordLength) {
     alert(`Password must be ${ minPasswordLength } characters at minimum.`);
     return;
@@ -136,6 +141,10 @@ const onSignUpClick = async () => {
 const onSignInClick = async () => {
   if (emailInput.value.length === 0 || passwordInput.value.length === 0) {
     alert('Credentials fields must not be empty.');
+    return;
+  }
+  if (!ValidateEmailAddress(emailInput.value)) {
+    alert('Invalid email address.');
     return;
   }
   if (passwordInput.value.length < minPasswordLength) {

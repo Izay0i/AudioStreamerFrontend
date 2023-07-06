@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="80" title="Upload" @close-modal="onModalClose">
+  <ModalComponent :width="80" :z-index="1" title="Upload" @close-modal="onModalClose">
     <div class="section">
       <form class="form">
         <label for="track">Name:</label>
@@ -7,7 +7,7 @@
         <label for="artist">Artist:</label>
         <input id="artist" type="text" placeholder="Artist's name" v-model="artistInputValue">
         <label for="description">Description:</label>
-        <textarea id="description" placeholder="Description" v-model="desInputValue"></textarea>
+        <textarea id="description" placeholder="Description" rows="6" v-model="desInputValue"></textarea>
         
         <template v-if="!isEditable">
           <label>Track:</label>
@@ -32,6 +32,7 @@
         controls 
         controlslist="nodownload" 
         :loop="loop" 
+        @loadedmetadata="(e) => audioDuration = e.target.duration"
         @timeupdate="(e) => { trackTime(e); timestamp = e.target.currentTime; }">
           <source :src="trackUrl" type="audio/mpeg">
         </audio>
@@ -46,7 +47,7 @@
       </div>
 
       <div style="display: flex; flex-direction: column; margin: 4px;">
-        <form style="display: flex;">
+        <form style="display: flex; margin-bottom: 4px;">
           <input type="number" min="0" step="0.000001" placeholder="timestamp" readonly v-model="timestamp">
           <input 
           type="number" 
@@ -54,11 +55,60 @@
           step="0.000001" 
           placeholder="duration" 
           v-model="duration">
-          <textarea placeholder="subtitle" style="width: 100%;" v-model="caption">{{ caption }}</textarea>
+          <textarea placeholder="caption" style="width: 100%;" v-model="caption">{{ caption }}</textarea>
         </form>
         <div style="display: flex; justify-content: space-between;">
-          <button @click="onAddCaptionClick">Add subtitle</button>
-          <button style="color: white; background-color: darkred;" @dblclick="() => captions = []">Remove subtitles</button>
+          <div style="display: flex; margin-right: 4px;">
+            <template v-if="!isTranscribing && !isDoneTranscribing">
+              <button style="display: flex; align-items: center; color: white; background-color: blueviolet;" @click="onTranscribeClick">
+                <span style="margin-right: 4px;">Transcribe</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-body-text" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M0 .5A.5.5 0 0 1 .5 0h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 0 .5Zm0 2A.5.5 0 0 1 .5 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm9 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm-9 2A.5.5 0 0 1 .5 4h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm5 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm7 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm-12 2A.5.5 0 0 1 .5 6h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5Zm8 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm-8 2A.5.5 0 0 1 .5 8h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm7 0a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm-7 2a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 0 1h-8a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Z"/>
+                </svg>
+                <span style="margin-left: 4px;">Indev</span>
+              </button>
+
+              <div style="display: flex; flex-direction: column; justify-content: space-between; margin-left: 4px;">
+                <span>Into:</span>
+                <select name="languages" v-model="selectedLanguageInputValue">
+                  <option disabled value="">Select a language</option>
+                  <template v-for="language in LanguageTags" :key="language">
+                    <option :value="language.value">{{ language.description }}</option>
+                  </template>
+                </select>
+              </div>
+            </template>
+
+            <template v-if="isTranscribing">
+              <button style="display: flex; align-items: center; color: black; background-color: yellow;" disabled>
+                <span style="margin-right: 4px;">Transcribing...</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stopwatch" viewBox="0 0 16 16">
+                  <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z"/>
+                  <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.512.512 0 0 1-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5zM8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3z"/>
+                </svg>
+              </button>
+            </template>
+            
+            <template v-if="isDoneTranscribing">
+              <button style="display: flex; align-items: center; color: black; background-color: white;" @click="onRollbackClick">
+                <span style="margin-right: 4px;">Rollback</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+                  <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 0 0-.214-.468l.893-.45a7.976 7.976 0 0 1 .45 1.088l-.95.313a7.023 7.023 0 0 0-.179-.483zm.53 2.507a6.991 6.991 0 0 0-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 0 1-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 0 1-.401.432l-.707-.707z"/>
+                  <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/>
+                  <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/>
+                </svg>
+              </button>
+            </template>
+          </div>
+          <div style="display: flex;">
+            <button :disabled="isTranscribing" @click="onAddCaptionClick">Add caption</button>
+            <button 
+            style="margin-left: 4px; color: white; background-color: darkred;" 
+            :disabled="isTranscribing" 
+            @click="onRemoveCaptionsClick">
+              Remove captions
+            </button>
+          </div>
         </div>
       </div>
 
@@ -78,20 +128,21 @@
       </div>
 
       <div style="display: flex; margin: 4px;">
-        <button style="flex: 1;" @click="onSaveCaptionsClick">Save subtitles</button>
+        <button style="flex: 1;" @click="onSaveCaptionsClick">Save captions</button>
       </div>
     </div>
     <div class="section" v-else>
       <div style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
-        <span style="font-size: 30px;">Subtitles are available after upload</span>
+        <span style="font-size: 30px;">Captions are available after upload</span>
       </div>
     </div>
   </ModalComponent>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, inject } from 'vue';
-import { minNameLength, maxNameLength, maxFileSize, oneMegaByte } from '../../constants/NumericConstants.js';
+import { ref, onMounted, watch, inject, computed } from 'vue';
+import { minNameLength, maxNameLength, maxFileSize, oneMegaByte, maxAllowedDuration } from '../../constants/NumericConstants.js';
+import { LanguageTags } from '../../constants/LanguageTagsConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import Caption from '../../objects/Caption.js';
@@ -126,12 +177,18 @@ onMounted(async () => {
       obj = JSON.parse(response.objects[0].captions);
     }
     captions.value = obj;
+    copyOfCaptions.value = [ ...obj ];
   }
 });
 
 const { notifyRefreshFeed } = inject('track');
 
-const isEditable = ref(true);
+const audioDuration = ref(0.0);
+const isEditable = ref(false);
+const isProcessingData = ref(false);
+const isTranscribing = ref(false);
+const isDoneTranscribing = ref(false);
+const isSavingCaptions = ref(false);
 const hasCaptions = ref(false);
 const loop = ref(false);
 const currentCaption = ref('...');
@@ -139,6 +196,7 @@ const timestamp = ref(0.0);
 const duration = ref(0.0);
 const caption = ref('');
 const captions = ref([]);
+const copyOfCaptions = ref([]);
 const trackUrl = ref(null);
 
 //inputs
@@ -146,11 +204,10 @@ const trackInputValue = ref('');
 const artistInputValue = ref('');
 const desInputValue = ref('');
 const tagsInputValue = ref('');
+const selectedLanguageInputValue = ref('');
 
 const trackFileInput = ref(null);
 const thumbnailFileInput = ref(null);
-
-const maxUploadSize = Math.floor(maxFileSize / oneMegaByte);
 
 const props = defineProps({
   track: {
@@ -178,6 +235,14 @@ watch([trackInputValue, trackFileInput], ([trackName, trackFile]) => {
   }
 });
 
+const maxUploadSize = computed(() => {
+  return Math.floor(maxFileSize / oneMegaByte);
+});
+
+const maxAllowedDurationInMinutes = computed(() => {
+  return Math.floor(maxAllowedDuration / 60.0);
+});
+
 const _convertTagsToArray = () => {
   if (!(!!tagsInputValue.value && typeof tagsInputValue.value === 'string')) {
     return;
@@ -202,6 +267,77 @@ const trackTime = (e) => {
   currentCaption.value = !!item ? item.message : '...';
 };
 
+const onUploadClick = async () => {
+  let canUpload = !!trackInputValue.value && !!artistInputValue.value && !!trackFileInput.value;
+  if (trackInputValue.value.length < minNameLength || trackInputValue.value.length > maxNameLength) {
+    alert(`First name input must be within ${ minNameLength } - ${ maxNameLength } characters.`);
+    canUpload = false;
+  }
+  if (artistInputValue.value.length < minNameLength || artistInputValue.value.length > maxNameLength) {
+    alert(`Second name input be within ${ minNameLength } - ${ maxNameLength } characters.`);
+    canUpload = false;
+  }
+  if (!canUpload) {
+    alert(`Where's your file?`);
+    return;
+  }
+  if (trackFileInput.value.size > maxFileSize) {
+    console.log(trackFileInput.value.size);
+    alert(`File size must not exceed ${ maxUploadSize.value }MB.`);
+    return;
+  }
+
+  if (isProcessingData.value) {
+    alert(`Uploading track, please wait.`);
+    return;
+  }
+
+  isProcessingData.value = true;
+
+  const userId = await GetCredentials();
+
+  let payload = {
+    memberId: userId,
+    containerName: 'media',
+    file: trackFileInput.value, 
+  };
+  let response = await MediaService.UploadMedia(payload);
+  const trackFilePath = response.objects[0];
+
+  let thumbnailFilePath = '';
+  if (!!thumbnailFileInput.value) {
+    if (thumbnailFileInput.value.size <= maxFileSize) {
+      payload = {
+        memberId: userId,
+        containerName: 'thumbnail',
+        file: thumbnailFileInput.value, 
+      };
+      response = await MediaService.UploadMedia(payload);
+      thumbnailFilePath = response.objects[0];
+    }
+    else {
+      alert(`Thumbnail size must not exceed ${ maxUploadSize.value }MB.`);
+    }
+  }
+
+  payload = {
+    memberId: userId,
+    trackName: trackInputValue.value,
+    artistName: artistInputValue.value,
+    description: desInputValue.value,
+    url: trackFilePath,
+    thumbnail: thumbnailFilePath,
+    tags: !!tagsInputValue.value ? _convertTagsToArray() : [],
+  };
+
+  response = await TrackService.AddTrack(payload);
+  response.statusCode === Status.Created && notifyRefreshFeed();
+
+  isProcessingData.value = false;
+
+  alert(response.message);
+};
+
 const onSaveChangesClick = async () => {
   let canUpload = !!trackInputValue.value && !!artistInputValue.value;
   if (trackInputValue.value.length < minNameLength || trackInputValue.value.length > maxNameLength) {
@@ -215,6 +351,13 @@ const onSaveChangesClick = async () => {
   if (!canUpload) {
     return;
   }
+
+  if (isProcessingData.value) {
+    alert(`Updating track, please wait.`);
+    return;
+  }
+
+  isProcessingData.value = true;
 
   let payload = {};
   let response;
@@ -240,7 +383,7 @@ const onSaveChangesClick = async () => {
       thumbnailFilePath = response.objects[0];
     }
     else {
-      alert(`Thumbnail size must not exceed ${maxUploadSize}MB.`);
+      alert(`Thumbnail size must not exceed ${ maxUploadSize.value }MB.`);
     }
   }
 
@@ -257,68 +400,53 @@ const onSaveChangesClick = async () => {
 
   response = await TrackService.UpdateTrack(payload);
   response.statusCode === Status.Ok && notifyRefreshFeed();
+
+  isProcessingData.value = false;
+
   alert(response.message);
 };
 
-const onUploadClick = async () => {
-  let canUpload = !!trackInputValue.value && !!artistInputValue.value && !!trackFileInput.value;
-  if (trackInputValue.value.length < minNameLength || trackInputValue.value.length > maxNameLength) {
-    alert(`First name input must be within ${ minNameLength } - ${ maxNameLength } characters.`);
-    canUpload = false;
-  }
-  if (artistInputValue.value.length < minNameLength || artistInputValue.value.length > maxNameLength) {
-    alert(`Second name input be within ${ minNameLength } - ${ maxNameLength } characters.`);
-    canUpload = false;
-  }
-  if (!canUpload) {
-    alert(`Where's your file?`);
+const onTranscribeClick = async () => {
+  alert('This feature is experimental, as such it should be used sparingly.');
+  alert('For a more accurate transcription, choose the most common spoken language used in the track.');
+  if (selectedLanguageInputValue.value === '') {
+    alert('Please select a language first.');
     return;
   }
-  if (trackFileInput.value.size > maxFileSize) {
-    console.log(trackFileInput.value.size);
-    alert(`File size must not exceed ${maxUploadSize}MB.`);
+  if (audioDuration.value > maxAllowedDuration) {
+    alert(`Only tracks that are no longer than ${ maxAllowedDurationInMinutes.value } minutes are allowed at this time.`);
     return;
   }
 
-  const userId = await GetCredentials();
+  let confirmStartTranscription = false;
+  let message = `[WARNING] This process may take up to ${ maxAllowedDurationInMinutes.value } minutes to complete.`;
+  alert(message);
+  message = '[WARNING] This will override your current subtitles.';
+  alert(message);
+  message = '[WARNING] This process can only be run once per session; once started, it cannot be stopped. Do you still wish to continue?';
+  confirmStartTranscription = confirm(message);
 
-  let payload = {
-    memberId: userId,
-    containerName: 'media',
-    file: trackFileInput.value, 
-  };
-  let response = await MediaService.UploadMedia(payload);
-  const trackFilePath = response.objects[0];
-
-  let thumbnailFilePath = '';
-  if (!!thumbnailFileInput.value) {
-    if (thumbnailFileInput.value.size <= maxFileSize) {
-      payload = {
-        memberId: userId,
-        containerName: 'thumbnail',
-        file: thumbnailFileInput.value, 
-      };
-      response = await MediaService.UploadMedia(payload);
-      thumbnailFilePath = response.objects[0];
-    }
-    else {
-      alert(`Thumbnail size must not exceed ${maxUploadSize}MB.`);
-    }
+  if (!confirmStartTranscription) {
+    alert('Process aborted.');
+    return;
   }
 
-  payload = {
-    memberId: userId,
-    trackName: trackInputValue.value,
-    artistName: artistInputValue.value,
-    description: desInputValue.value,
-    url: trackFilePath,
-    thumbnail: thumbnailFilePath,
-    tags: !!tagsInputValue.value ? _convertTagsToArray() : [],
-  };
+  isTranscribing.value = true;
 
-  response = await TrackService.AddTrack(payload);
-  response.statusCode === Status.Created && notifyRefreshFeed();
-  alert(response.message);
+  captions.value = [];
+  const response = await MediaService.Transcribe(props.track.url, selectedLanguageInputValue.value);
+  captions.value = response.statusCode === Status.Ok ? response.objects[0] : [];
+
+  isTranscribing.value = false;
+  isDoneTranscribing.value = true;
+};
+
+const onRollbackClick = () => {
+  const message = 'Do you want to rollback?';
+  if (!confirm(message)) {
+    return;
+  }
+  captions.value = [ ...copyOfCaptions.value ];
 };
 
 const onAddCaptionClick = () => {
@@ -335,7 +463,22 @@ const onAddCaptionClick = () => {
   caption.value = '';
 };
 
+const onRemoveCaptionsClick = () => {
+  const message = 'Remove captions?';
+  if (!confirm(message)) {
+    return;
+  }
+  captions.value = [];
+};
+
 const onSaveCaptionsClick = async () => {
+  if (isSavingCaptions.value || isTranscribing.value) {
+    alert(`Updating subtitles, please wait.`);
+    return;
+  }
+  
+  isSavingCaptions.value = true;
+
   let response;
   let captionId;
   let payload = {};
@@ -374,10 +517,20 @@ const onSaveCaptionsClick = async () => {
   };
   await TrackService.UpdateTrack(payload);
   //
+
+  isSavingCaptions.value = false;
+
   alert(response.message);
 };
 
 const onModalClose = (value) => {
+  if (isProcessingData.value || 
+    isSavingCaptions.value || 
+    isTranscribing.value) 
+  {
+    alert(`One or more processes are currently running, please wait.`);
+    return;
+  }
   emit('close-modal-top-level', value);
 };
 </script>
@@ -403,8 +556,10 @@ const onModalClose = (value) => {
 }
 
 .info {
+  flex: 2;
   text-align-last: center;
   font-size: 18px;
+  margin: 4px;
   padding: 10px;
   white-space: pre-line;
   resize: none;
@@ -435,7 +590,7 @@ const onModalClose = (value) => {
 }
 
 .captions {
-  flex: 2;
+  flex: 10;
   margin: 4px;
   overflow: auto;
   display: flex;

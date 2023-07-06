@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent title="Profile" @close-modal="onModalClose">
+  <ModalComponent :z-index="2" title="Profile" @close-modal="onModalClose">
     <div class="section">
       <div class="avatar-section">
         <img :src="userAvatar" loading="lazy" alt="user's avatar" class="avatar">
@@ -82,11 +82,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref, inject } from 'vue';
-import { computed } from '@vue/reactivity';
+import { onMounted, ref, inject, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../../constants/RouteConstants.js';
 import { maxDisplayNameLength, minNameLength, minPasswordLength, maxFileSize, oneMegaByte } from '../../constants/NumericConstants.js';
+import { sysLocale, dateTimeFormatOptions } from '../../constants/DateConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import { SearchTracks } from '../../functions/SearchHelper.js';
@@ -122,6 +122,8 @@ const mainUserId = ref(0);
 const isMainUser = ref(false);
 const isFollowing = ref(false);
 const isSearching = ref(false);
+const isUpdatingInformation = ref(false);
+const isUpdatingBiography = ref(false);
 const userData = ref(new Member());
 const userAvatar = ref(noSignal);
 const userTracks = ref([]);
@@ -135,8 +137,6 @@ const newPassInput = ref('');
 const renewPassInput = ref('');
 const searchInput = ref('');
 
-const maxUploadSize = Math.floor(maxFileSize / oneMegaByte);
-
 const emit = defineEmits(['close-modal-top-level']);
 
 const props = defineProps({
@@ -146,8 +146,12 @@ const props = defineProps({
   }
 });
 
+const maxUploadSize = computed(() => {
+  return Math.floor(maxFileSize / oneMegaByte);
+});
+
 const localeDate = computed(() => {
-  return new Date(userData.value.dateCreated + 'Z').toLocaleString();
+  return new Date(userData.value.dateCreated + 'Z').toLocaleString(sysLocale, dateTimeFormatOptions);
 });
 
 const _handleResponse = async (response) => {
@@ -225,6 +229,13 @@ const onSaveCredentials = async () => {
     return;
   }
 
+  if (isUpdatingInformation.value) {
+    alert(`Updating user's information, please wait.`);
+    return;
+  }
+
+  isUpdatingInformation.value = true;
+
   let imageFilePath = userData.value.avatar;
   if (!!imageFileInput.value) {
     if (imageFileInput.value.size <= maxFileSize) {
@@ -247,7 +258,7 @@ const onSaveCredentials = async () => {
       imageFilePath = response.objects[0];
     }
     else {
-      alert(`File size must not exceed ${maxUploadSize}MB.`);
+      alert(`File size must not exceed ${ maxUploadSize.value }MB.`);
     }
   }
 
@@ -258,6 +269,9 @@ const onSaveCredentials = async () => {
   };
 
   response = await MemberService.UpdateMember(payload);
+  
+  isUpdatingInformation.value = false;
+
   alert(response.message);
   await _getAvatar();
 };
@@ -273,12 +287,22 @@ const onSearchTracks = async () => {
 };
 
 const onSaveBiography = async () => {
+  if (isUpdatingBiography.value) {
+    alert(`Updating user's information, please wait.`);
+    return;
+  }
+  
+  isUpdatingBiography.value = true;
+
   const payload = {
     email: userData.value.email,
     biography: userData.value.biography,
   };
 
   const response = await MemberService.UpdateMember(payload);
+
+  isUpdatingBiography.value = false;
+
   alert(response.message);
 };
 
@@ -303,6 +327,10 @@ const onUnfollowUser = async () => {
 };
 
 const onModalClose = (value) => {
+  if (isUpdatingInformation.value || isUpdatingBiography.value) {
+    alert(`One or more processes are currently running, please wait.`);
+    return;
+  }
   emit('close-modal-top-level', value);
 };
 </script>

@@ -3,6 +3,16 @@ import { BASE_URL } from "../http-common";
 const name = 'media';
 
 export default {
+  async Transcribe(src, lang = 'en-US') {
+    const response = await fetch(`${BASE_URL}/${name}/transcribe?` + new URLSearchParams({
+      src,
+      lang,
+    }), {
+      method: 'GET',
+      mode: 'cors',
+    });
+    return response.json();
+  },
   GetMediaStream(src, containerName, contentType) {
     return `${BASE_URL}/${name}?` + new URLSearchParams({
       src,

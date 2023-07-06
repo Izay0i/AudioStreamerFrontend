@@ -3,7 +3,7 @@
     <div style="display: flex;">
       <div style="flex: 1; margin-right: 4px;">
         <p style="font-weight: bold; font-size: 22px; width: 0; min-width: 100%; overflow: auto;">{{ title }}</p>
-        <span>Date: {{ uploadedDate }}</span>
+        <span>Date uploaded: {{ uploadedDate }}</span>
 
         <div style="display: flex; align-items: center; margin-bottom: 4px;">
           <span>Uploader:</span>
@@ -42,6 +42,7 @@ import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { defaultRatingValue } from '../constants/NumericConstants.js';
 import { fallbackPlaylistName } from '../constants/StringConstants.js';
+import { sysLocale, dateTimeFormatOptions } from '../constants/DateConstants.js';
 import { Status } from '../constants/StatusConstants.js';
 import { EncodeMedia } from '../functions/MediaHelper.js';
 import { GetCredentials } from '../functions/StorageHelper.js';
@@ -166,7 +167,7 @@ const uploadedDate = computed(() => {
   if (!!infoProps.trackData && !!infoProps.trackData.dateCreated) {
     date = infoProps.trackData.dateCreated + 'Z';
   }
-  return new Date(date).toLocaleString();
+  return new Date(date).toLocaleString(sysLocale, dateTimeFormatOptions);
 });
 </script>
 

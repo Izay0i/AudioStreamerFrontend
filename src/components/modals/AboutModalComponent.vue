@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="50" :height="50" title="about.txt" @close-modal="onModalClose">
+  <ModalComponent :width="50" :height="50" :z-index="3" title="about.txt" @close-modal="onModalClose">
     <div class="section">
       <textarea readonly class="text-area">Disclaimer: This website is used for educational purposes only.
       </textarea>

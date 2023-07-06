@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="30" :height="50" title="In queue" @close-modal="onModalClose">
+  <ModalComponent :width="30" :height="50" :z-index="5" title="In queue" @close-modal="onModalClose">
     <div class="section" style="overflow-y: auto;">
       <div class="controls">
         <div>

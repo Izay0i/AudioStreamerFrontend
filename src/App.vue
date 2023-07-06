@@ -69,6 +69,14 @@ button:active:not(:disabled), input[type="file"]::file-selector-button:active {
   border-style: inset;
 }
 
+select {
+  border-radius: 0;
+}
+
+select:focus {
+  outline: none;
+}
+
 input {
   border-radius: 0;
   border-width: 1px;

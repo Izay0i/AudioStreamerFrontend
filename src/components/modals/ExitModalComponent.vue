@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="20" :height="10" title="Quit current session?" @close-modal="onModalClose">
+  <ModalComponent :width="20" :height="10" :z-index="7" title="Quit current session?" @close-modal="onModalClose">
     <div class="section">
       <button @click="onExitClick">Yes</button>
       <button style="margin-left: 4px;" @click="emit('close-modal-top-level', false)">No</button>

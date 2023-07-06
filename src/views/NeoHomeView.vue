@@ -142,7 +142,7 @@
           <textarea 
           readonly 
           class="info" 
-          style="margin-left: 0; flex: 1; text-align-last: center;">{{ currentCaption }}</textarea>
+          style="margin-left: 0; flex: 3; text-align-last: center;">{{ currentCaption }}</textarea>
           
           <div class="audio">
             <audio 
@@ -442,7 +442,7 @@ const setCurrentIndex = (value) => {
 
 const notifyRefreshFeed = () => refreshFeed.value = true;
 
-const autoPlayAudio = async (val) => {
+const autoPlayAudio = (val) => {
   audio.value = val;
   if (!!audio.value && !!audio.value.src) {
     audio.value.autoplay = true;
