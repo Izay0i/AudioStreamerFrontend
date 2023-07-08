@@ -223,6 +223,7 @@ import { shallowRef, ref, onMounted, watch, provide, toRaw, readonly } from 'vue
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { maxItemsInTopList, maxRecommendedItems } from '../constants/NumericConstants.js';
+import { mediaContainerName, thumbnailContainerName, avatarContainerName, mimeImgAny, mimeSndMP3 } from '../constants/StringConstants';
 import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
 import { SearchPlaylists, SearchTracks } from '../functions/SearchHelper.js';
@@ -313,8 +314,8 @@ watch(selectedTrack, async (track) => {
     const userData = response.objects[0];
     const payload = {
       src: userData.avatar,
-      containerName: 'avatar',
-      contentType: 'image/*',
+      containerName: avatarContainerName,
+      contentType: mimeImgAny,
     };
     selectedTrackUserAvatar.value = URL.createObjectURL(await MediaService.GetMedia(payload));
     //GetMedia returns a blob, on slower network it can be a bit problematic
@@ -527,19 +528,19 @@ const onDownloadTrackClick = async () => {
   isDownloading.value = true;
   let payload = {
     src: currentTrack.url,
-    containerName: 'media',
-    contentType: 'audio/mpeg',
+    containerName: mediaContainerName,
+    contentType: mimeSndMP3,
   };
   const trackBlob = await MediaService.GetMedia(payload);
   
   payload = {
     src: currentTrack.thumbnail,
-    containerName: 'thumbnail',
-    contentType: 'image/*',
+    containerName: thumbnailContainerName,
+    contentType: mimeImgAny,
   };
   const thumbnailBlob = await MediaService.GetMedia(payload);
   
-  let captions = "[]";
+  let captions = '[]';
   if (currentTrack.hasCaptions && currentTrack.captionsLength !== 0) {
     const response = await CaptionService.GetCaptionsByTrackId(currentTrack.trackId);
     captions = response.objects[0].captions;

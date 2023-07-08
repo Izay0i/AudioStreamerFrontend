@@ -19,7 +19,7 @@ export default {
         break;
       }
       var item = decoder.decode(value).replace(/\[|]/g, '').replace(/^,/, '');
-      if (item.length > 0) {
+      if (item.length !== 0) {
         collection.value.push(JSON.parse(item));
       }
     }

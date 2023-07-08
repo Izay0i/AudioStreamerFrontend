@@ -7,6 +7,7 @@
         Check it out :)
 
         To get started, why don't you click on any of the folders
+        If you see ... after some text, hover over it
       </textarea>
 
       <details>

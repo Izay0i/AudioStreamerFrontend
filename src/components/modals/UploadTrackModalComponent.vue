@@ -142,6 +142,7 @@
 <script setup>
 import { ref, onMounted, watch, inject, computed } from 'vue';
 import { minNameLength, maxNameLength, maxFileSize, oneMegaByte, maxAllowedDuration } from '../../constants/NumericConstants.js';
+import { mediaContainerName, thumbnailContainerName } from '../../constants/StringConstants.js';
 import { LanguageTags } from '../../constants/LanguageTagsConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
@@ -298,7 +299,7 @@ const onUploadClick = async () => {
 
   let payload = {
     memberId: userId,
-    containerName: 'media',
+    containerName: mediaContainerName,
     file: trackFileInput.value, 
   };
   let response = await MediaService.UploadMedia(payload);
@@ -309,7 +310,7 @@ const onUploadClick = async () => {
     if (thumbnailFileInput.value.size <= maxFileSize) {
       payload = {
         memberId: userId,
-        containerName: 'thumbnail',
+        containerName: thumbnailContainerName,
         file: thumbnailFileInput.value, 
       };
       response = await MediaService.UploadMedia(payload);
@@ -370,13 +371,13 @@ const onSaveChangesClick = async () => {
       if (!!track.thumbnail) {
         payload = {
           url: track.thumbnail,
-          containerName: 'thumbnail',
+          containerName: thumbnailContainerName,
         };
         await MediaService.DeleteMedia(payload);
       }
       payload = {
         memberId: track.trackId,
-        containerName: 'thumbnail',
+        containerName: thumbnailContainerName,
         file: thumbnailFileInput.value, 
       };
       response = await MediaService.UploadMedia(payload);
@@ -421,7 +422,7 @@ const onTranscribeClick = async () => {
   let confirmStartTranscription = false;
   let message = `[WARNING] This process may take up to ${ maxAllowedDurationInMinutes.value } minutes to complete.`;
   alert(message);
-  message = '[WARNING] This will override your current subtitles.';
+  message = '[WARNING] This will override your current captions.';
   alert(message);
   message = '[WARNING] This process can only be run once per session; once started, it cannot be stopped. Do you still wish to continue?';
   confirmStartTranscription = confirm(message);

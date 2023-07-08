@@ -9,6 +9,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
+import { credentialsRouteName } from '../../constants/RouteConstants.js';
 import { RemoveCredentials } from '../../functions/StorageHelper.js';
 import ModalComponent from './ModalComponent.vue';
 
@@ -18,7 +19,7 @@ const emit = defineEmits(['close-modal-top-level']);
 
 const onExitClick = async () => {
   await RemoveCredentials();
-  router.push('credentials');
+  router.push(credentialsRouteName);
 };
 
 const onModalClose = (value) => {

@@ -70,6 +70,8 @@ button:active:not(:disabled), input[type="file"]::file-selector-button:active {
 }
 
 select {
+  font-size: 16px;
+  padding: 4px;
   border-radius: 0;
 }
 

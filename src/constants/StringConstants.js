@@ -1,5 +1,23 @@
 export const fallbackPlaylistName = 'Liked tracks';
 
+export const placeholder = 'string';
+
+export const mediaContainerName = 'media';
+export const thumbnailContainerName = 'thumbnail';
+export const avatarContainerName = 'avatar';
+
+export const mimeImgAny = 'image/*';
+export const mimeImgWEBP = 'image/webp';
+export const mimeImgJPEG = 'image/jpeg';
+export const mimeImgPNG = 'image/png';
+export const mimeGIF = 'image/gif';
+
+export const mimeSndAny = 'audio/*';
+export const mimeSndWEBM = 'audio/webm';
+export const mimeSndOGG = 'audio/ogg';
+export const mimeSndMP3 = 'audio/mpeg';
+export const mimeSndWAV = 'audio/wav';
+
 /*
 有象無象 人の成り
 虚勢 心象 人外 物の怪みたいだ

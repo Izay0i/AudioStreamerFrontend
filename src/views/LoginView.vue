@@ -44,7 +44,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { mainRouteName } from '../constants/RouteConstants.js';
-import { fallbackPlaylistName } from '../constants/StringConstants.js';
+import { fallbackPlaylistName, placeholder } from '../constants/StringConstants.js';
 import { minNameLength, maxDisplayNameLength, minPasswordLength } from '../constants/NumericConstants.js';
 import { ValidateEmailAddress } from '../functions/InputHelper.js';
 import { SaveCredentials } from '../functions/StorageHelper.js';
@@ -156,7 +156,7 @@ const onSignInClick = async () => {
   const payload = {
     email: emailInput.value,
     password: passwordInput.value,
-    displayName: 'string',
+    displayName: placeholder,
   };
 
   const response = await CredentialsService.SignIn(payload);

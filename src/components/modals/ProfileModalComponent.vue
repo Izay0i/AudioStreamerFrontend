@@ -86,6 +86,7 @@ import { onMounted, ref, inject, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../../constants/RouteConstants.js';
 import { maxDisplayNameLength, minNameLength, minPasswordLength, maxFileSize, oneMegaByte } from '../../constants/NumericConstants.js';
+import { placeholder, avatarContainerName } from '../../constants/StringConstants.js';
 import { sysLocale, dateTimeFormatOptions } from '../../constants/DateConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
@@ -215,7 +216,7 @@ const onSaveCredentials = async () => {
       email: userData.value.email,
       password: currentPassInput.value,
       newPassword: newPassInput.value,
-      displayName: 'string',
+      displayName: placeholder,
     };
 
     response = await CredentialsService.ChangePassword(payload);
@@ -242,7 +243,7 @@ const onSaveCredentials = async () => {
       if (!!userData.value.avatar) {
         const imagePayload = {
           url: userData.value.avatar,
-          containerName: 'avatar',
+          containerName: avatarContainerName,
         };
 
         await MediaService.DeleteMedia(imagePayload);
@@ -250,7 +251,7 @@ const onSaveCredentials = async () => {
 
       const imagePayload = {
         memberId: mainUserId.value,
-        containerName: 'avatar',
+        containerName: avatarContainerName,
         file: imageFileInput.value,
       };
 

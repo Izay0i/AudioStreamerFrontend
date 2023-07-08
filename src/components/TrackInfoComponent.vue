@@ -36,12 +36,12 @@
 </template>
 
 <script setup>
-import { onUpdated } from 'vue';
+import { onMounted, onUpdated } from 'vue';
 import { computed, ref } from '@vue/reactivity';
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { defaultRatingValue } from '../constants/NumericConstants.js';
-import { fallbackPlaylistName } from '../constants/StringConstants.js';
+import { fallbackPlaylistName, mimeImgPNG } from '../constants/StringConstants.js';
 import { sysLocale, dateTimeFormatOptions } from '../constants/DateConstants.js';
 import { Status } from '../constants/StatusConstants.js';
 import { EncodeMedia } from '../functions/MediaHelper.js';
@@ -50,15 +50,16 @@ import StatsService from '../services/StatsService.js';
 import PlaylistService from '../services/PlaylistService.js';
 import noSignal from '../assets/no_signal.png';
 
+onMounted(async () => {
+  userId.value = await GetCredentials();
+});
+
 onUpdated(async () => {
   if (infoProps.trackData?.offline) {
     return;
   }
 
-  //updates twice, not gonna fix
-  userId.value = await GetCredentials();
-  trackId.value = !!infoProps.trackData ? infoProps.trackData.trackId : 0;
-
+  trackId.value = infoProps.trackData?.trackId ?? 0;
   if (!!userId.value) {
     const response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId.value);
     rating.value = response.statusCode === Status.Ok ? response.objects[0].rating : 0;
@@ -80,33 +81,34 @@ const infoProps = defineProps({
   },
   avatarUrl: {
     type: String,
-    default: EncodeMedia(noSignal, 'image/png'),
+    default: EncodeMedia(noSignal, mimeImgPNG),
   },
 });
 
 const _handleStats = async () => {
-  if (!!userId) {
-    let response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId.value);
+  let response = await StatsService.GetStatsFromUserForTrack(userId.value, trackId.value);
+  const stats = response.objects[0];
 
-    const content = response.objects[0];
+  const payload = {
+    memberId: userId.value,
+    trackId: trackId.value,
+    rating: stats.rating === defaultRatingValue ? 0 : defaultRatingValue,
+    tags: infoProps.trackData.tags,
+  };
 
-    const payload = {
-      memberId: userId.value,
-      trackId: trackId.value,
-      rating: content.rating === defaultRatingValue ? 0 : defaultRatingValue,
-      tags: infoProps.trackData.tags,
-    };
-
-    response = await StatsService.UpdateStats(payload);
-    if (response.statusCode === Status.Ok) {
-      rating.value = response.objects[0].rating;
-    }
+  response = await StatsService.UpdateStats(payload);
+  if (response.statusCode === Status.Ok) {
+    rating.value = response.objects[0].rating;
   }
 };
 
 const onRate = async () => {
-  if (!(!!infoProps.trackData && !infoProps.trackData.offline && !!userId.value)) {
+  if (!(!!userId.value)) {
     router.push(credentialsRouteName);
+    return;
+  }
+
+  if (!(Object.keys(infoProps.trackData).length !== 0 && !infoProps.trackData?.offline)) {
     return;
   }
 
@@ -125,22 +127,26 @@ const onRate = async () => {
 }
 
 const onAvatarClick = () => {
-  if (!(!!infoProps.trackData && !!infoProps.trackData.memberId)) {
+  if (!(!!infoProps.trackData.memberId)) {
     return;
   }
   emit('show-profile', infoProps.trackData.memberId);
 };
 
 const onAddToPlaylist = () => {
-  if (!(!!userId.value && !infoProps.trackData?.offline)) {
+  if (!(!!userId.value)) {
     router.push(credentialsRouteName);
+    return;
+  }
+
+  if (!(Object.keys(infoProps.trackData).length !== 0 && !infoProps.trackData?.offline)) {
     return;
   }
   emit('show-playlists', infoProps.trackData.trackId);
 };
 
 const title = computed(() => {
-  if (!(!!infoProps.trackData && !!infoProps.trackData.trackName)) {
+  if (!(!!infoProps.trackData.trackName)) {
     return 'Select a track';
   }
   const trackName = infoProps.trackData.trackName;
@@ -149,14 +155,14 @@ const title = computed(() => {
 });
 
 const thumbnail = computed(() => {
-  if (!(!!infoProps.trackData && !!infoProps.trackData.thumbnail)) {
+  if (!(!!infoProps.trackData.thumbnail)) {
     return noSignal;
   }
   return infoProps.trackData.thumbnail;
 });
 
 const description = computed(() => {
-  if (!(!!infoProps.trackData && !!infoProps.trackData.description)) {
+  if (!(!!infoProps.trackData.description)) {
     return 'No signal';
   }
   return infoProps.trackData.description;
@@ -164,7 +170,7 @@ const description = computed(() => {
 
 const uploadedDate = computed(() => {
   let date = null;
-  if (!!infoProps.trackData && !!infoProps.trackData.dateCreated) {
+  if (!!infoProps.trackData.dateCreated) {
     date = infoProps.trackData.dateCreated + 'Z';
   }
   return new Date(date).toLocaleString(sysLocale, dateTimeFormatOptions);
