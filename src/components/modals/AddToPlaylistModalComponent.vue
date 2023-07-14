@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="25" :height="50" :z-index="6" title="My Playlists" @close-modal="onModalClose">
+  <ModalComponent :width="25" :height="50" :z-index="8" title="My Playlists" @close-modal="onModalClose">
     <div class="section">
       <div style="display: flex; position: sticky; top: 0;">
         <input 

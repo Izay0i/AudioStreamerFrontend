@@ -1,23 +1,48 @@
 <template>
-  <ModalComponent :width="80" :z-index="1" title="Upload" @close-modal="onModalClose">
+  <ModalComponent :width="80" :z-index="2" title="Upload" @close-modal="onModalClose">
     <div class="section">
       <form class="form">
-        <label for="track">Name:</label>
-        <input id="track" type="text" placeholder="Track name" v-model="trackInputValue">
+        <label for="name">Name:</label>
+        <input id="name" type="text" placeholder="Track name" v-model="trackInputValue">
+        
         <label for="artist">Artist:</label>
         <input id="artist" type="text" placeholder="Artist's name" v-model="artistInputValue">
-        <label for="description">Description:</label>
-        <textarea id="description" placeholder="Description" rows="6" v-model="desInputValue"></textarea>
+        <button @click.prevent="onShowArtistsListModalClick">
+          <div style="display: flex; justify-content: center; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
+              <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+              <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
+            </svg>
+            <p>- {{ selectedArtistName }}</p>
+          </div>
+        </button>
+
+        <label for="description">Description: (Optional)</label>
+        <textarea 
+        id="description" 
+        placeholder="Description" 
+        rows="6" 
+        spellcheck="false" 
+        autocorrect="off" 
+        autocapitalize="off" 
+        v-model="desInputValue"></textarea>
         
+        <label for="genres">Genre:</label>
+        <select id="genres" name="genres" v-model="selectedGenreId">
+          <template v-for="genre in genresList" :key="genre">
+            <option :value="genre.genreId">{{ genre.genreName }}</option>
+          </template>
+        </select>
+
         <template v-if="!isEditable">
-          <label>Track:</label>
-          <input type="file" accept=".webm, .ogg, .mp3, .wav" @change="(e) => trackFileInput = e.target.files[0]">
+          <label for="track">Track:</label>
+          <input id="track" type="file" accept=".webm, .ogg, .mp3, .wav" @change="(e) => trackFileInput = e.target.files[0]">
         </template>
 
-        <label>Thumbnail: (Optional)</label>
-        <input type="file" accept=".webp, .jpeg, .jpg, .png, .gif" @change="(e) => thumbnailFileInput = e.target.files[0]">
-        <label for="tags">Tags (Optional, must be comma-separated):</label>
-        <input id="tags" type="text" placeholder="tag1,tag2" v-model="tagsInputValue">
+        <label for="thumbnail">Thumbnail: (Optional)</label>
+        <input id="thumbnail" type="file" accept=".webp, .jpeg, .jpg, .png, .gif" @change="(e) => thumbnailFileInput = e.target.files[0]">
+        <!-- <label for="tags">Tags (Optional, must be comma-separated):</label>
+        <input id="tags" type="text" placeholder="tag1,tag2" v-model="tagsInputValue"> -->
       </form>
 
       <button style="margin: 4px" v-if="isEditable" @click="onSaveChangesClick">Save changes</button>
@@ -32,9 +57,9 @@
         controls 
         controlslist="nodownload" 
         :loop="loop" 
+        :src="trackUrl" 
         @loadedmetadata="(e) => audioDuration = e.target.duration"
         @timeupdate="(e) => { trackTime(e); timestamp = e.target.currentTime; }">
-          <source :src="trackUrl" type="audio/mpeg">
         </audio>
 
         <div style="display: flex; align-items: center;">
@@ -60,7 +85,7 @@
         <div style="display: flex; justify-content: space-between;">
           <div style="display: flex; margin-right: 4px;">
             <template v-if="!isTranscribing && !isDoneTranscribing">
-              <button style="display: flex; align-items: center; color: white; background-color: blueviolet;" @click="onTranscribeClick">
+              <button style="display: flex; align-items: center; color: white; border-color: blueviolet; background-color: blueviolet;" @click="onTranscribeClick">
                 <span style="margin-right: 4px;">Transcribe</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-body-text" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M0 .5A.5.5 0 0 1 .5 0h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 0 .5Zm0 2A.5.5 0 0 1 .5 2h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm9 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm-9 2A.5.5 0 0 1 .5 4h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm5 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm7 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Zm-12 2A.5.5 0 0 1 .5 6h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5Zm8 0a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm-8 2A.5.5 0 0 1 .5 8h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm7 0a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm-7 2a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 0 1h-8a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5Zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Z"/>
@@ -103,7 +128,7 @@
           <div style="display: flex;">
             <button :disabled="isTranscribing" @click="onAddCaptionClick">Add caption</button>
             <button 
-            style="margin-left: 4px; color: white; background-color: darkred;" 
+            style="margin-left: 4px; color: white; border-color: darkred; background-color: darkred;" 
             :disabled="isTranscribing" 
             @click="onRemoveCaptionsClick">
               Remove captions
@@ -137,37 +162,59 @@
       </div>
     </div>
   </ModalComponent>
+
+  <AddArtistInfoModalComponent 
+  v-if="showArtistsListModal" 
+  @close-modal-top-level="onCloseArtistsListModalClick" />
 </template>
 
 <script setup>
-import { ref, onMounted, watch, inject, computed } from 'vue';
+import { ref, onMounted, watch, provide, inject, computed } from 'vue';
 import { minNameLength, maxNameLength, maxFileSize, oneMegaByte, maxAllowedDuration } from '../../constants/NumericConstants.js';
 import { mediaContainerName, thumbnailContainerName } from '../../constants/StringConstants.js';
 import { LanguageTags } from '../../constants/LanguageTagsConstants.js';
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
+
 import Caption from '../../objects/Caption.js';
+
 import TrackService from '../../services/TrackService.js';
 import CaptionService from '../../services/CaptionService.js';
+import ArtistService from '../../services/ArtistService.js';
+import GenreService from '../../services/GenreService.js';
+import MediaService from '../../services/MediaService.js';
+import StatsService from '../../services/StatsService.js';
+
 import ModalComponent from './ModalComponent.vue';
+import AddArtistInfoModalComponent from './AddArtistInfoModalComponent.vue';
 import CaptionItemComponent from '../CaptionItemComponent.vue';
-import MediaService from '../../services/MediaService';
 
 onMounted(async () => {
   const track = props.track
   isEditable.value = !!track;
+
+  const response = await ArtistService.GetArtistName(!!track ? track.artistinfoId : selectedArtistId.value);
+  selectedArtistName.value = response.objects[0];
+  if (!isEditable.value) {
+    artistInputValue.value = response.objects[0];
+  }
+
+  genresList.value = await GenreService.GetGenres();
+  
   //assign track props to inputs
   if (isEditable.value) {
     trackInputValue.value = track.trackName;
     artistInputValue.value = track.artistName;
     desInputValue.value = track.description;
     
-    track.tags.forEach((tag) => tagsInputValue.value += tag + ',');
-    const atEnd = tagsInputValue.value.slice(-1);
-    if (atEnd === ',') {
-      tagsInputValue.value = tagsInputValue.value.slice(0, -1);
-    }
-
+    // track.tags.forEach((tag) => tagsInputValue.value += tag + ',');
+    // const atEnd = tagsInputValue.value.slice(-1);
+    // if (atEnd === ',') {
+    //   tagsInputValue.value = tagsInputValue.value.slice(0, -1);
+    // }
+    
+    selectedGenreId.value = track.genreId;
+    
     trackUrl.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
 
     //fetch closed captions/subtitles
@@ -199,6 +246,13 @@ const caption = ref('');
 const captions = ref([]);
 const copyOfCaptions = ref([]);
 const trackUrl = ref(null);
+const genresList = ref([]);
+//1: default - Uncategorized
+const selectedGenreId = ref(1);
+//1: default - Unknown artist
+const selectedArtistId = ref(1);
+const selectedArtistName = ref('');
+const showArtistsListModal = ref(false);
 
 //inputs
 const trackInputValue = ref('');
@@ -224,16 +278,16 @@ watch([trackInputValue, trackFileInput], ([trackName, trackFile]) => {
     trackInputValue.value = trackFile.name;
   }
 
-  if (!!trackName && !isEditable.value) {
-    const tags = trackName.replace(/[\\/\(\)\[\]]+/g, '').split(' ');
-    if (tags.length > 0) {
-      tagsInputValue.value = '';
-      for (let i = 0; i < tags.length - 1; ++i) {
-        tagsInputValue.value += tags[i].toLocaleLowerCase() + ',';
-      }
-      tagsInputValue.value += tags[tags.length - 1].toLocaleLowerCase();
-    }
-  }
+  // if (!!trackName && !isEditable.value) {
+  //   const tags = trackName.replace(/[\\/\(\)\[\]]+/g, '').split(' ');
+  //   if (tags.length > 0) {
+  //     tagsInputValue.value = '';
+  //     for (let i = 0; i < tags.length - 1; ++i) {
+  //       tagsInputValue.value += tags[i].toLocaleLowerCase() + ',';
+  //     }
+  //     tagsInputValue.value += tags[tags.length - 1].toLocaleLowerCase();
+  //   }
+  // }
 });
 
 const maxUploadSize = computed(() => {
@@ -267,6 +321,15 @@ const trackTime = (e) => {
 
   currentCaption.value = !!item ? item.message : '...';
 };
+
+const setArtistValues = (obj) => {
+  selectedArtistId.value = obj.id;
+  selectedArtistName.value = obj.name;
+  artistInputValue.value = obj.name;
+};
+
+const onShowArtistsListModalClick = () => showArtistsListModal.value = true;
+const onCloseArtistsListModalClick = (value) => showArtistsListModal.value = value;
 
 const onUploadClick = async () => {
   let canUpload = !!trackInputValue.value && !!artistInputValue.value && !!trackFileInput.value;
@@ -323,12 +386,13 @@ const onUploadClick = async () => {
 
   payload = {
     memberId: userId,
+    genreId: selectedGenreId.value,
+    artistinfoId: selectedArtistId.value,
     trackName: trackInputValue.value,
     artistName: artistInputValue.value,
     description: desInputValue.value,
     url: trackFilePath,
     thumbnail: thumbnailFilePath,
-    tags: !!tagsInputValue.value ? _convertTagsToArray() : [],
   };
 
   response = await TrackService.AddTrack(payload);
@@ -346,7 +410,7 @@ const onSaveChangesClick = async () => {
     canUpload = false;
   }
   if (artistInputValue.value.length < minNameLength || artistInputValue.value.length > maxNameLength) {
-    alert(`Second name input be within ${ minNameLength } - ${ maxNameLength } characters.`);
+    alert(`Second name input must be within ${ minNameLength } - ${ maxNameLength } characters.`);
     canUpload = false;
   }
   if (!canUpload) {
@@ -390,11 +454,12 @@ const onSaveChangesClick = async () => {
 
   payload = {
     trackId: track.trackId,
+    genreId: selectedGenreId.value,
+    artistinfoId: selectedArtistId.value,
     trackName: trackInputValue.value,
     artistName: artistInputValue.value,
     description: desInputValue.value,
     thumbnail: !!thumbnailFilePath ? thumbnailFilePath : track.thumbnail,
-    tags: !!tagsInputValue.value ? _convertTagsToArray() : [],
     hasCaptions: track.hasCaptions,
     captionsLength: track.captionsLength,
   };
@@ -403,6 +468,8 @@ const onSaveChangesClick = async () => {
   response.statusCode === Status.Ok && notifyRefreshFeed();
 
   isProcessingData.value = false;
+
+  await StatsService.ChangeGenreOfTrack(track.trackId, selectedGenreId.value);
 
   alert(response.message);
 };
@@ -533,6 +600,11 @@ const onModalClose = (value) => {
   }
   emit('close-modal-top-level', value);
 };
+
+provide('upload', {
+  setArtistValues,
+  onCloseArtistsListModalClick,
+});
 </script>
 
 <style scoped>
@@ -580,6 +652,7 @@ const onModalClose = (value) => {
   flex: 1;
   margin-left: 10px;
   padding: 10px;
+  border-radius: 4px;
   border-style: outset;
   border-width: 4px;
 }
@@ -605,11 +678,14 @@ const onModalClose = (value) => {
   top: 0;
   padding: 6px;
   display: flex;
-  justify-content: space-between;
   border-bottom-style: solid;
   border-bottom-color: gray;
   border-bottom-width: 1px;
   background-color: white;
   z-index: 999;
+}
+
+.table-header > span {
+  flex: 1;
 }
 </style>

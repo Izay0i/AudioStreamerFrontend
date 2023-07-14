@@ -92,8 +92,14 @@ const onRemoveClick = () => {
   flex: 1;
 }
 
+.buttons > button:not(:last-child) {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
 .buttons > button:nth-of-type(3) {
-  background-color: red;
   color: white;
+  border-color: red;
+  background-color: red;
 }
 </style>

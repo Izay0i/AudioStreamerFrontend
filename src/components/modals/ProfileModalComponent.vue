@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :z-index="2" title="Profile" @close-modal="onModalClose">
+  <ModalComponent :z-index="3" title="Profile" @close-modal="onModalClose">
     <div class="section">
       <div class="avatar-section">
         <img :src="userAvatar" loading="lazy" alt="user's avatar" class="avatar">
@@ -29,19 +29,15 @@
             <button @click="onSaveCredentials">Save changes</button>
           </template>
           <template v-else>
-            <button v-if="isFollowing" @click.once="onUnfollowUser">Unfollow</button>
-            <button v-else @click.once="onFollowUser">Follow</button>
+            <button style="color: white; border-color: darkred; background-color: darkred;" v-if="isFollowing" @click.once="onUnfollowUser">Unfollow</button>
+            <button style="color: white; border-color: green; background-color: green;" v-else @click.once="onFollowUser">Follow</button>
           </template>
         </form>
       </div>
     </div>
 
     <div class="section" style="overflow-y: auto;">
-      <!-- Boy oh boy if only there was a way to export and reuse a piece of code instead of having to retype the same thing over and over again -->
-      <!-- Maybe had I had more time, I wouldn't have had to resort to such tactics  -->
-      <!-- Blaming on the misfortune of your birth again I see -->
-      <!-- Shut up Char -->
-      <div style="display: flex; position: sticky; top: 0;">
+      <div style="display: flex; position: sticky; top: 0; z-index: 1;">
         <input 
         type="text" 
         class="search-input" 
@@ -49,7 +45,14 @@
         v-model="searchInput" 
         @keydown.enter="onSearchTracks">
 
-        <button @click="onSearchTracks">
+        <select style="border-radius: 0;" name="genres" v-model="selectedGenreId" @change="onSelectGenre">
+          <option value="0">All</option>
+          <template v-for="genre in genresList" :key="genre">
+            <option :value="genre.genreId">{{ genre.genreName }}</option>
+          </template>
+        </select>
+
+        <button style="border-top-left-radius: 0; border-bottom-left-radius: 0;" @click="onSearchTracks">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
           </svg>
@@ -73,6 +76,9 @@
         <textarea 
         :placeholder="isMainUser ? 'Write something about yourself' : ''" 
         :readonly="!isMainUser" 
+        spellcheck="false" 
+        autocorrect="off" 
+        autocapitalize="off" 
         class="info" 
         v-model="userData.biography"></textarea>
         <button style="margin-top: 4px;" v-if="isMainUser" @click="onSaveBiography">Save changes</button>
@@ -91,11 +97,14 @@ import { sysLocale, dateTimeFormatOptions } from '../../constants/DateConstants.
 import { Status } from '../../constants/StatusConstants.js';
 import { GetCredentials } from '../../functions/StorageHelper.js';
 import { SearchTracks } from '../../functions/SearchHelper.js';
+
 import CredentialsService from '../../services/CredentialsService.js';
 import MemberService from '../../services/MemberSevice.js';
 import FollowerService from '../../services/FollowerService.js';
 import MediaService from '../../services/MediaService.js';
 import TrackService from '../../services/TrackService.js';
+import GenreService from '../../services/GenreService.js';
+
 import Member from '../../objects/Member.js';
 import noSignal from '../../assets/no_signal.png';
 import ModalComponent from './ModalComponent.vue';
@@ -113,6 +122,7 @@ onMounted(async () => {
   if (!!mainUserId.value) {
     await _getFollowingList();
   }
+  genresList.value = await GenreService.GetGenres();
 });
 
 const router = useRouter();
@@ -130,6 +140,9 @@ const userAvatar = ref(noSignal);
 const userTracks = ref([]);
 const copyOfUserTracks = ref([]);
 const userFollowingList = ref([]);
+const genresList = ref([]);
+//0 - All
+const selectedGenreId = ref(0);
 
 //inputs
 const imageFileInput = ref(null);
@@ -165,8 +178,9 @@ const _getUserData = async () => {
 };
 
 const _getTracks = async () => {
-  userTracks.value = await loadingWrapper(TrackService.GetTracksFromUserId(userData.value.memberId), isSearching);
-  copyOfUserTracks.value = userTracks.value;
+  const response = await loadingWrapper(TrackService.GetTracksFromUserId(userData.value.memberId), isSearching);
+  userTracks.value = response;
+  copyOfUserTracks.value = response;
 };
 
 //No idea why the path is encoded(?)
@@ -181,6 +195,15 @@ const _getAvatar = async () => {
 const _getFollowingList = async () => {
     userFollowingList.value = await FollowerService.GetFollowings(mainUserId.value);
     isFollowing.value = userFollowingList.value.some(user => user.memberId === props.userId);
+};
+
+const _getTracksOfGenre = (genreId) => {
+  if (genreId !== 0) {
+    return copyOfUserTracks.value.filter(track => track.genreId === genreId);
+  }
+  else {
+    return copyOfUserTracks.value;
+  }
 };
 
 const onFileChange = (e) => imageFileInput.value = e.target.files[0];
@@ -277,13 +300,23 @@ const onSaveCredentials = async () => {
   await _getAvatar();
 };
 
+const onSelectGenre = () => {
+  userTracks.value = _getTracksOfGenre(parseInt(selectedGenreId.value));
+};
+
 const onSearchTracks = async () => {
   if (!!searchInput.value) {
-    userTracks.value = await loadingWrapper(SearchTracks(userTracks.value, searchInput.value.trim()), isSearching);
-    userTracks.value = userTracks.value.length !== 0 ? userTracks.value : copyOfUserTracks.value;
+    userTracks.value = await loadingWrapper(
+      SearchTracks(
+        copyOfUserTracks.value, 
+        searchInput.value.trim(), 
+        parseInt(selectedGenreId.value)), 
+        isSearching);
+    userTracks.value = userTracks.value.length !== 0 ? 
+      userTracks.value : _getTracksOfGenre(parseInt(selectedGenreId.value));
   }
   else {
-    userTracks.value = copyOfUserTracks.value;
+    userTracks.value = _getTracksOfGenre(parseInt(selectedGenreId.value));
   }
 };
 
@@ -340,6 +373,7 @@ const onModalClose = (value) => {
 .section {
   display: flex;
   flex-direction: column;
+  overflow: auto;
 }
 
 .avatar-section {
@@ -351,9 +385,10 @@ const onModalClose = (value) => {
 }
 
 .avatar {
-  width: 100%; 
-  height: 100%; 
-  object-fit: contain; 
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 10px;
   background-color: black;
 }
 
@@ -371,8 +406,10 @@ const onModalClose = (value) => {
 .search-input {
   flex: 1;
   padding: 10px;
+  min-width: 0;
   font-size: 18px;
-  border-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   background-color: white;
 }
 

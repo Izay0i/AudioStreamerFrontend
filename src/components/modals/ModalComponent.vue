@@ -1,6 +1,6 @@
 <template>
   <div class="modal-body">
-    <div style="display: flex; width: 100%; align-items: center;">
+    <div class="header-body">
       <span class="grey-block" @click="onCloseModal">-</span>
       <span class="header">{{ modalProps.title }}</span>
     </div>
@@ -65,6 +65,15 @@ const modalDimension = computed(() => {
   z-index: v-bind('modalProps.zIndex');
 }
 
+.header-body {
+  display: flex;
+  width: 100%;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('../../assets/backgrounds/discs.jpg');
+  background-repeat: repeat;
+  background-size: cover;
+  background-position: center center;
+}
+
 .grey-block {
   cursor: pointer;
   padding: 4px;
@@ -82,11 +91,12 @@ const modalDimension = computed(() => {
   flex: 1;
   text-align: center;
   padding: 4px;
+  font-size: 18px;
   color: yellow;
   border-style: solid;
   border-width: 3px;
-  border-color: blue;
-  background-color: blue;
+  border-color: black;
+  /* background-color: blue; */
 }
 
 .contents {

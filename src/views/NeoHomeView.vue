@@ -1,6 +1,6 @@
 <template>
   <div class="body">
-    <div style="display: flex; width: 100%;">
+    <div class="header-body">
       <span class="grey-block">-</span>
       <span class="header">C:\files\projects\audio_streamer\main\{{ defaultDir }}</span>
     </div>
@@ -18,20 +18,38 @@
         <ul class="folders">
           <template v-for="item in _listItems" :key="item">
             <span v-if="item.render.value" class="folder" @click="onFolderClick(item)">
-              <svg v-if="item.icon === 'folder'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-folder-fill" viewBox="0 0 16 16">
-                <path d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a1.99 1.99 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3zm-8.322.12C1.72 3.042 1.95 3 2.19 3h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139z"/>
-              </svg>
-              <svg v-if="item.icon === 'file'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark" viewBox="0 0 16 16">
-                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
-              </svg>
-              <li> {{ item.title }} </li>
+              <template v-if="item.icon === 'folder'">
+                <svg v-if="item.title === 'home'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-house-fill" viewBox="0 0 16 16">
+                  <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5Z"/>
+                  <path d="m8 3.293 6 6V13.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5V9.293l6-6Z"/>
+                </svg>
+                <svg v-if="item.title === 'discover'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-compass-fill" viewBox="0 0 16 16">
+                  <path d="M15.5 8.516a7.5 7.5 0 1 1-9.462-7.24A1 1 0 0 1 7 0h2a1 1 0 0 1 .962 1.276 7.503 7.503 0 0 1 5.538 7.24zm-3.61-3.905L6.94 7.439 4.11 12.39l4.95-2.828 2.828-4.95z"/>
+                </svg>
+                <svg v-if="item.title === 'my_tracks'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-disc-fill" viewBox="0 0 16 16">
+                  <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-6 0a2 2 0 1 0-4 0 2 2 0 0 0 4 0zM4 8a4 4 0 0 1 4-4 .5.5 0 0 0 0-1 5 5 0 0 0-5 5 .5.5 0 0 0 1 0zm9 0a.5.5 0 1 0-1 0 4 4 0 0 1-4 4 .5.5 0 0 0 0 1 5 5 0 0 0 5-5z"/>
+                </svg>
+                <svg v-if="item.title === 'my_playlists'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-cassette-fill" viewBox="0 0 16 16">
+                  <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h.191l1.862-3.724A.5.5 0 0 1 4 10h8a.5.5 0 0 1 .447.276L14.31 14h.191a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13ZM4 7a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2ZM6 6a1 1 0 0 1 1-1h2a1 1 0 0 1 0 2H7a1 1 0 0 1-1-1Z"/>
+                  <path d="m13.191 14-1.5-3H4.309l-1.5 3h10.382Z"/>
+                </svg>
+                <svg v-if="item.title === 'storage'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-hdd-fill" viewBox="0 0 16 16">
+                  <path d="M0 10a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-1zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zm2 0a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM.91 7.204A2.993 2.993 0 0 1 2 7h12c.384 0 .752.072 1.09.204l-1.867-3.422A1.5 1.5 0 0 0 11.906 3H4.094a1.5 1.5 0 0 0-1.317.782L.91 7.204z"/>
+                </svg>
+              </template>
+              <template v-if="item.icon === 'file'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-filetype-txt" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-2v-1h2a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5L14 4.5ZM1.928 15.849v-3.337h1.136v-.662H0v.662h1.134v3.337h.794Zm4.689-3.999h-.894L4.9 13.289h-.035l-.832-1.439h-.932l1.228 1.983-1.24 2.016h.862l.853-1.415h.035l.85 1.415h.907l-1.253-1.992 1.274-2.007Zm1.93.662v3.337h-.794v-3.337H6.619v-.662h3.064v.662H8.546Z"/>
+                </svg>
+              </template>
+              <li>{{ item.title }}</li>
             </span>
           </template>
         </ul>
 
-        <div style="display: flex; flex-direction: column; min-height: 0;">
-          <div style="margin-right: 4px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="text-decoration: underline; font-size: 18px; font-weight: bold; margin-left: 4px;">Top {{ maxItemsInTopList }} of the day:</span>
+        <div style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
+          <div style="margin-right: 4px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <span class="discover-label">Most viewed:</span>
             <button @click="async () => await _getTracksWithTheMostViewsOfTheDay()">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -39,7 +57,7 @@
               </svg>
             </button>
           </div>
-          <div style="margin: 4px; display: flex; flex-direction: column; overflow: auto; border-style: inset; border-width: 6px; background-color: white;">
+          <div class="top-list">
             <TrackItemComponent 
             v-for="track in tracksOfTheDay" 
             :key="track" 
@@ -56,7 +74,7 @@
       
       <div class="section" style="overflow-y: auto;">
         <template v-if="areItemsPopulated || showLoadingText">
-          <div style="display: flex; position: sticky; top: 0;">
+          <div style="display: flex; position: sticky; top: 0; z-index: 1;">
             <input 
             type="text" 
             class="search-input" 
@@ -64,7 +82,14 @@
             v-model="searchInput" 
             @keydown.enter="onSearchItems">
             
-            <button @click="onSearchItems">
+            <select style="border-radius: 0;" name="genres" v-model="selectedGenreId" @change="onSelectGenre">
+              <option value="0">All</option>
+              <template v-for="genre in genresList" :key="genre">
+                <option :value="genre.genreId">{{ genre.genreName }}</option>
+              </template>
+            </select>
+
+            <button style="border-top-left-radius: 0; border-bottom-left-radius: 0;" @click="onSearchItems">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
               </svg>
@@ -74,21 +99,38 @@
           <template v-if="defaultDir === 'discover'">
             <div style="margin-top: 4px; display: flex; flex-direction: column; height: 100%;">
               <div style="flex: 1;">
-                <span class="discover-label">Recommended:</span>
-                <template v-for="recommendedItem in recommendedItems" :key="recommendedItem">
-                  <component 
-                  :is="componentType" 
-                  :data="recommendedItem" 
-                  @play="onTrackClick" 
-                  @show-playlists="onPlaylistModalClick" 
-                  @edit-track="onEditTrackClick" 
-                  @play-tracks="onStartPlaylistClick" />
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="discover-label">Trending:</span>
+
+                  <select style="margin-right: 4px;" name="genres" v-model="selectedTrendingGenreId" @change="onSelectTrendingGenre">
+                    <option value="0">All</option>
+                    <template v-for="genre in genresList" :key="genre">
+                      <option :value="genre.genreId">{{ genre.genreName }}</option>
+                    </template>
+                  </select>
+                </div>
+                
+                <template v-if="showLoadingText">
+                  <span class="empty-list-label">Please wait...</span>
+                </template>
+                <template v-else>
+                  <template v-for="recommendedItem in recommendedItems" :key="recommendedItem">
+                    <component 
+                    :is="componentType" 
+                    :data="recommendedItem" 
+                    @play="onTrackClick" 
+                    @show-playlists="onPlaylistModalClick" 
+                    @edit-track="onEditTrackClick" 
+                    @play-tracks="onStartPlaylistClick" />
+                  </template>
                 </template>
               </div>
               <div style="flex: 2;">
-                <span class="discover-label">
-                  From people you're following:
-                </span>
+                <div style="display: flex; align-items: center;">
+                  <span class="discover-label">
+                    From people you're following:
+                  </span>
+                </div>
                 <template v-if="showLoadingText">
                   <span class="empty-list-label">Please wait...</span>
                 </template>
@@ -222,7 +264,7 @@
 import { shallowRef, ref, onMounted, watch, provide, toRaw, readonly } from 'vue';
 import { useRouter } from 'vue-router';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
-import { maxItemsInTopList, maxRecommendedItems } from '../constants/NumericConstants.js';
+import { maxItemsInTopList, maxRecommendedItems, noCategoryGenreId } from '../constants/NumericConstants.js';
 import { mediaContainerName, thumbnailContainerName, avatarContainerName, mimeImgAny, mimeSndMP3 } from '../constants/StringConstants';
 import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
@@ -235,8 +277,8 @@ import MemberSevice from '../services/MemberSevice.js';
 import StatsService from '../services/StatsService.js';
 import CaptionService from '../services/CaptionService.js';
 import PlaylistService from '../services/PlaylistService.js';
-import PredictService from '../services/PredictService.js';
 import FollowerService from '../services/FollowerService.js';
+import GenreService from '../services/GenreService.js';
 
 import TrackInfoComponent from '../components/TrackInfoComponent.vue';
 import TrackItemComponent from '../components/TrackItemComponent.vue';
@@ -255,19 +297,23 @@ onMounted(async () => {
   userId.value = await GetCredentials();
   isLoggedIn.value = !!userId.value;
   await _getTracksWithTheMostViewsOfTheDay();
+  genresList.value = await GenreService.GetGenres();
 });
 
 const router = useRouter();
 
 const audio = ref(null);
-//dealing with dynamic components now
-//renaming tracks to items
+//items are dynamic components
 const items = ref([]);
 const copyOfItems = ref([]);
 const recommendedItems = ref([]);
 const componentType = shallowRef(TrackItemComponent);
 const areItemsPopulated = ref(false);
 //
+const genresList = ref([]);
+//0: All
+const selectedGenreId = ref(0);
+const selectedTrendingGenreId = ref(0);
 const tracksOfTheDay = ref([]);
 const closedCaption = ref([]);
 const isLoggedIn = ref(false);
@@ -371,6 +417,7 @@ const _retrieveStats = async () => {
     payload = {
       memberId: userId.value,
       trackId,
+      genreId: selectedTrack.value.genreId,
       tags: selectedTrack.value.tags,
     };
     response = await StatsService.AddStats(payload);
@@ -379,6 +426,7 @@ const _retrieveStats = async () => {
   payload = {
     memberId: userId.value,
     trackId,
+    genreId: response.objects[0].genreId,
     rating: response.objects[0].rating,
   };
 
@@ -410,8 +458,8 @@ const _getTracksWithTheMostViewsOfTheDay = async () => {
   tracksOfTheDay.value = await TrackService.GetTracksWithTheMostViewsOfTheDay(maxItemsInTopList);
 };
 
-const _getRecommendedTracks = async (userId, limit) => {
-  return await loadingWrapper(PredictService.GetRecommendedItems(userId, limit));
+const _getTrendingTracks = async (genreId, limit) => {
+  return await loadingWrapper(StatsService.GetTopTracksWithMostViewsAndLikesFromGenre(limit, genreId));
 };
 
 const _getTracksFromFollowings = async (userId) => {
@@ -466,6 +514,25 @@ const trackTime = (e) => {
   }
 };
 
+const getTracksOfGenre = (genreId) => {
+  if (genreId !== 0) {
+    return copyOfItems.value.filter(item => item.genreId === genreId);
+  }
+  else {
+    return copyOfItems.value;
+  }
+};
+
+const onSelectGenre = () => {
+  if (defaultDir.value !== 'my_playlists') {
+    items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
+  }
+};
+
+const onSelectTrendingGenre = async () => {
+  recommendedItems.value = await _getTrendingTracks(selectedTrendingGenreId.value, maxRecommendedItems);
+};
+
 const onSearchItems = async () => {
   if (!!searchInput.value) {
     switch (defaultDir.value) {
@@ -473,12 +540,17 @@ const onSearchItems = async () => {
         items.value = SearchPlaylists(copyOfItems.value, searchInput.value.trim());
       break;
       default:
-        items.value = await loadingWrapper(SearchTracks(copyOfItems.value, searchInput.value.trim()));
+        items.value = await loadingWrapper(
+          SearchTracks(
+            copyOfItems.value, 
+            searchInput.value.trim(), 
+            parseInt(selectedGenreId.value)));
     }
-    items.value = items.value.length !== 0 ? items.value : copyOfItems.value;
+    items.value = items.value.length !== 0 ? 
+      items.value : getTracksOfGenre(parseInt(selectedGenreId.value));
   }
   else {
-    items.value = copyOfItems.value;
+    items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
   }
 }
 
@@ -608,6 +680,8 @@ const _listItems = [
       areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemComponent;
+
+      items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
     } 
   }, 
   { 
@@ -617,9 +691,11 @@ const _listItems = [
     func: async () => {
       items.value = await _getTracksFromFollowings(userId.value);
       copyOfItems.value = items.value;
-      recommendedItems.value = await _getRecommendedTracks(userId.value, maxRecommendedItems);
+      recommendedItems.value = await _getTrendingTracks(selectedTrendingGenreId.value, maxRecommendedItems);
       areItemsPopulated.value = items.value.length !== 0 || recommendedItems.value.length !== 0;
       componentType.value = TrackItemComponent;
+
+      items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
     } 
   }, 
   { 
@@ -631,6 +707,8 @@ const _listItems = [
       areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
+
+      items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
     }
   },
   { 
@@ -653,6 +731,8 @@ const _listItems = [
       areItemsPopulated.value = items.value.length !== 0;
       copyOfItems.value = items.value;
       componentType.value = TrackItemEditableComponent;
+
+      items.value = getTracksOfGenre(parseInt(selectedGenreId.value));
     }
   }, 
   { 
@@ -693,6 +773,15 @@ provide('track', {
   box-shadow: 12px 20px rgba(0, 0, 0, 0.72);
 }
 
+.header-body {
+  display: flex;
+  width: 100%;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('../assets/backgrounds/discs.jpg');
+  background-repeat: repeat;
+  background-size: cover;
+  background-position: center center;
+}
+
 .grey-block {
   padding: 4px;
   border-style: solid;
@@ -704,11 +793,11 @@ provide('track', {
   flex: 1;
   padding: 4px;
   text-align: center;
+  font-size: 18px;
   color: yellow;
   border-style: solid;
   border-width: 1px;
-  border-color: blue;
-  background-color: blue;
+  border-color: black;
 }
 
 .side-profile {
@@ -747,6 +836,8 @@ provide('track', {
 .section {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
   width: 100%;
   height: 100%;
 }
@@ -780,7 +871,8 @@ provide('track', {
   flex: 1;
   padding: 10px;
   font-size: 18px;
-  border-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   background-color: white;
 }
 
@@ -824,14 +916,30 @@ provide('track', {
   flex: 1;
   margin-left: 10px;
   padding: 10px;
+  border-radius: 4px;
   border-style: outset;
   border-width: 4px;
 }
 
 .item:hover {
   cursor: pointer;
-  /* background-color: gray; */
   border-style: inset;
+}
+
+.top-list {
+  margin: 4px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  border-radius: 4px;
+  border-style: inset;
+  border-width: 4px;
+  background-color: white;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('../assets/backgrounds/vinyl.jpg');
+  background-repeat: repeat;
+  background-size: cover;
+  background-position: center center;
 }
 
 .add-track {
@@ -847,6 +955,13 @@ provide('track', {
   border-width: 2px;
   background-color: black;
   box-shadow: 4px 4px dimgray;
+}
+
+.top-list-label {
+  font-style: italic;
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 4px;
 }
 
 .empty-list-label {

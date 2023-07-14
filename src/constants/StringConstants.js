@@ -1,10 +1,12 @@
 export const fallbackPlaylistName = 'Liked tracks';
+export const fallbackArtistName = 'Unknown artist';
 
 export const placeholder = 'string';
 
 export const mediaContainerName = 'media';
 export const thumbnailContainerName = 'thumbnail';
 export const avatarContainerName = 'avatar';
+export const artistContainerName = 'artist';
 
 export const mimeImgAny = 'image/*';
 export const mimeImgWEBP = 'image/webp';

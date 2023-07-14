@@ -1,4 +1,4 @@
-import { BASE_URL } from "../http-common";
+import { BASE_URL } from "../http-common.js";
 
 const name = 'track';
 

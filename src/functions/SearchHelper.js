@@ -1,14 +1,59 @@
+import { useFuse } from '@vueuse/integrations/useFuse';
+import CaptionService from '../services/CaptionService.js';
+
+const artistOptions = () => ({
+  fuseOptions: {
+    keys: ['artistName'],
+    isCaseSensitive: false,
+    shouldSort: false,
+  },
+});
+
+const trackOptions = () => ({
+  fuseOptions: {
+    keys: ['trackName', 'artistName'],
+    isCaseSensitive: false,
+    shouldSort: false,
+  },
+});
+
+const playlistOptions = () => ({
+  fuseOptions: {
+    keys: ['name'],
+    isCaseSensitive: false,
+    shouldSort: false,
+  },
+});
+
+const FuzzySearch = (items, keyword, options) => {
+  if (typeof items !== 'object') {
+    return;
+  }
+
+  const { results } = useFuse(keyword, items, options);
+
+  let suggestions = [];
+  for (const result of results.value) {
+    suggestions.push(result.item);
+  }
+  return suggestions;
+};
+
+export const SearchArtists = (items, keyword) => {
+  if (typeof items !== 'object') {
+    return;
+  }
+  return FuzzySearch(items, keyword, artistOptions);
+};
+
 export const SearchPlaylists = (items, keyword) => {
   if (typeof items !== 'object') {
     return;
   }
-  return items.filter(item => 
-    item.name
-    .toLocaleLowerCase()
-    .includes(keyword.toLocaleLowerCase()));
+  return FuzzySearch(items, keyword, playlistOptions);
 };
 
-export const SearchTracks = async (items, keyword) => {
+export const SearchTracks = async (items, keyword, genreId = 0) => {
   if (typeof items !== 'object') {
     return;
   }
@@ -16,58 +61,23 @@ export const SearchTracks = async (items, keyword) => {
   let filteredResults = [];
   filteredResults = filteredResults
     .concat(await SearchByCaptions(items, keyword))
-    .concat(SearchByName(items, keyword))
-    .concat(SearchByArtist(items, keyword))
-    .concat(SearchByDescription(items, keyword))
-    .concat(SearchByTags(items, keyword));
+    .concat(SearchByName(items, keyword));
   filteredResults = Array.from(new Set(filteredResults));
+  
+  if (genreId !== 0) {
+    filteredResults = filteredResults.filter(fr => fr.genreId === genreId);
+  }
   return filteredResults;
 };
 
 const SearchByName = (items, keyword) => {
-  let filteredResults =  items.filter(item => 
-    item.trackName
-    .toLocaleLowerCase()
-    .includes(keyword.toLocaleLowerCase()));
-  return filteredResults;
-};
-
-const SearchByArtist = (items, keyword) => {
-  let filteredResults = items.filter(item => 
-    item.artistName
-    .toLocaleLowerCase()
-    .includes(keyword.toLocaleLowerCase()));
-  return filteredResults;
-};
-
-const SearchByDescription = (items, keyword) => {
-  let filteredResults = items.filter(item => 
-    item.description
-    .toLocaleLowerCase()
-    .includes(keyword.toLocaleLowerCase()));
-  return filteredResults;
-};
-
-const SearchByTags = (items, keyword) => {
-  let filteredResults = [];
-  items.forEach(item => {
-    let tagsLength = item.tags.length;
-    let hits = 0;
-    
-    item.tags.forEach(tag => {
-      tag
-      .toLocaleLowerCase()
-      .includes(keyword.toLocaleLowerCase()) && ++hits;
-    });
-
-    //keyword needs to include at least 50% of the tags to be considered accurate
-    (hits >= Math.floor(tagsLength / 2.0)) && filteredResults.push(item);
-  });
-  return filteredResults;
+  if (typeof items !== 'object') {
+    return;
+  }
+  return FuzzySearch(items, keyword, trackOptions);
 };
 
 //I hate this
-import CaptionService from '../services/CaptionService.js';
 const SearchByCaptions = async (items, keyword) => {
   let filteredResults = [];
   let filteredIds = [];

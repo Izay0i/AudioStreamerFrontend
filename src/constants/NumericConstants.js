@@ -14,3 +14,5 @@ export const maxFileSize = 100 * 1024 * 1024;
 export const oneMegaByte = 1 * 1024 * 1024;
 
 export const maxAllowedDuration = 300.0;
+
+export const noCategoryGenreId = 1;

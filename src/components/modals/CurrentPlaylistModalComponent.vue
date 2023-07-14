@@ -1,5 +1,5 @@
 <template>
-  <ModalComponent :width="30" :height="50" :z-index="5" title="In queue" @close-modal="onModalClose">
+  <ModalComponent :width="30" :height="50" :z-index="7" title="Queue" @close-modal="onModalClose">
     <div class="section" style="overflow-y: auto;">
       <div class="controls">
         <div>
@@ -14,13 +14,30 @@
               <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
             </svg>
           </button>
-          <button @click="onClearPlaylistClick">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+          <button @click="setCurrentIndex(nextTrack())">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
+              <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"/>
+            </svg>
+          </button>
+          <button @click="setCurrentIndex(prevTrack())">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-caret-right-fill" viewBox="0 0 16 16">
+              <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
+            </svg>
+          </button>
+        </div>
+        <textarea 
+        readonly 
+        spellcheck="false" 
+        autocorrect="off" 
+        autocapitalize="off" 
+        class="info">{{ currentTrackInfo }}</textarea>
+        <div>
+          <button style="border-color: red; background-color: red;" @click="onClearPlaylistClick">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" class="bi bi-x-lg" viewBox="0 0 16 16">
               <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
             </svg>
           </button>
         </div>
-        <textarea readonly class="info">{{ currentTrackInfo }}</textarea>
       </div>
 
       <template v-for="(track, index) in playlistTracks" :key="track" >
@@ -36,16 +53,11 @@
 </template>
 
 <script setup>
-import { ref, inject, onUpdated, watch } from 'vue';
+import { ref, inject, watch } from 'vue';
 import { GetRandomIntInclusive } from '../../functions/NumberHelper.js';
 import Track from '../../objects/Track.js';
 import ModalComponent from './ModalComponent.vue';
 import TrackItemComponent from '../TrackItemComponent.vue';
-
-onUpdated(() => {
-  playlistTracks.value = props.tracks;
-  playlistLength.value = props.tracks.length;
-});
 
 const currentIndex = inject('track-readonly');
 const { onTrackClick, onPlaylistModalClick, setCurrentIndex } = inject('track');
@@ -53,7 +65,7 @@ const { onTrackClick, onPlaylistModalClick, setCurrentIndex } = inject('track');
 const loop = ref(false);
 const playlistTracks = ref([]);
 const playlistLength = ref(0);
-const currentTrackInfo = ref('');
+const currentTrackInfo = ref('No signal');
 
 const props = defineProps({
   tracks: {
@@ -62,6 +74,11 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close-modal-top-level', 'loop-playlist', 'clear-playlist']);
+
+watch(() => props.tracks, (tracks) => {
+  playlistTracks.value = tracks;
+  playlistLength.value = tracks.length;
+});
 
 watch([playlistTracks, currentIndex], ([tracks, index]) => {
   if (tracks.length === 0) {
@@ -76,6 +93,16 @@ watch([playlistTracks, currentIndex], ([tracks, index]) => {
 
 const shuffle = () => {
   return GetRandomIntInclusive(0, playlistLength.value - 1);
+};
+
+const nextTrack = () => {
+  var index = currentIndex.value;
+  return index >= playlistLength.value - 1 ? 0 : ++index;
+};
+
+const prevTrack = () => {
+  var index = currentIndex.value;
+  return index <= 0 ? playlistLength.value - 1 : --index;
 };
 
 const onModalClose = (value) => {
@@ -105,6 +132,7 @@ const onClearPlaylistClick = () => {
   border-style: inset;
   border-width: 4px;
   background-color: darkgray;
+  z-index: 1;
 }
 
 .info {

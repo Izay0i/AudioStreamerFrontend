@@ -3,6 +3,10 @@ import { BASE_URL } from '../http-common.js';
 const name = 'memberstats';
 
 export default {
+  async GetTopTracksWithMostViewsAndLikesFromGenre(limit, gId) {
+    const response = await fetch(`${BASE_URL}/${name}/top/${limit}/genre/${gId}`);
+    return response.json();
+  },
   async GetStatsForTrack(id) {
     const response = await fetch(`${BASE_URL}/${name}/track/${id}`);
     return response.json();
@@ -57,4 +61,11 @@ export default {
     });
     return response.json();
   },
+  async ChangeGenreOfTrack(tId, gId) {
+    const response = await fetch(`${BASE_URL}/${name}/track/${tId}/genre/${gId}`, {
+      method: 'PATCH',
+      mode: 'cors',
+    });
+    return response.json();
+  }
 };
