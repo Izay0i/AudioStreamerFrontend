@@ -62,7 +62,7 @@ import CredentialsService from '../services/CredentialsService.js';
 import PlaylistService from '../services/PlaylistService.js';
 import ModalComponent from '../components/modals/ModalComponent.vue';
 
-const defaultPath = 'C:\\files\\projects\\audio_streamer\\';
+const defaultPath = 'credentials\\';
 const defaultDir = ref('*.*');
 const isRegisterMode = ref(false);
 

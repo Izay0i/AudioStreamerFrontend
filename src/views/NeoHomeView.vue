@@ -2,7 +2,7 @@
   <div class="body">
     <div class="header-body">
       <span class="grey-block">-</span>
-      <span class="header">C:\files\projects\audio_streamer\main\{{ defaultDir }}</span>
+      <span class="header">main\{{ defaultDir }}</span>
     </div>
 
     <div class="side-profile">
@@ -50,7 +50,7 @@
         <div style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
           <div style="margin-right: 4px; display: flex; justify-content: space-between; align-items: flex-end;">
             <span class="discover-label">Most viewed:</span>
-            <button @click="async () => await _getTracksWithTheMostViewsOfTheDay()">
+            <button @click="onFetchingLatest">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                 <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
@@ -268,13 +268,13 @@
 //This is not kino
 import { shallowRef, ref, onMounted, watch, provide, toRaw, readonly } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAVLine } from 'vue-audio-visual';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
-import { maxItemsInTopList, maxRecommendedItems, noCategoryGenreId } from '../constants/NumericConstants.js';
+import { maxItemsInTopList, maxRecommendedItems } from '../constants/NumericConstants.js';
 import { mediaContainerName, thumbnailContainerName, avatarContainerName, mimeImgAny, mimeSndMP3 } from '../constants/StringConstants';
 import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
 import { SearchPlaylists, SearchTracks } from '../functions/SearchHelper.js';
-import { useAVLine } from 'vue-audio-visual';
 
 import noSignal from '../assets/no_signal.png';
 import TrackService from '../services/TrackService.js';
@@ -340,6 +340,7 @@ const editTrackData = ref(null);
 const refreshFeed = ref(false);
 const searchInput = ref('');
 const isDownloading = ref(false);
+const isFetchingLatest = ref(false);
 
 const currentIndex = ref(-1);
 const playlistLength = ref(0);
@@ -478,7 +479,7 @@ const _getTracks = async () => {
 };
 
 const _getTracksWithTheMostViewsOfTheDay = async () => {
-  tracksOfTheDay.value = await TrackService.GetTracksWithTheMostViewsOfTheDay(maxItemsInTopList);
+  tracksOfTheDay.value = await loadingWrapper(TrackService.GetTracksWithTheMostViewsOfTheDay(maxItemsInTopList), isFetchingLatest);
 };
 
 const _getTrendingTracks = async (genreId, limit) => {
@@ -570,8 +571,16 @@ const onSearchItems = async () => {
   }
 }
 
+const onFetchingLatest = async () => {
+  if (isFetchingLatest.value) {
+    return;
+  }
+
+  await _getTracksWithTheMostViewsOfTheDay();
+};
+
 const onFolderClick = async (item) => {
-  defaultDir.value = item.icon === 'folder' ? item.title : '*.*';
+  defaultDir.value = item.icon === 'folder' ? item.title : defaultDir.value;
   await item.func();
 };
 
