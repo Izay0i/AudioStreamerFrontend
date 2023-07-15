@@ -1,7 +1,7 @@
 <template>
   <ModalComponent :width="35" :height="70" :z-index="6" title="Biography" @close-modal="onModalClose">
     <div class="section">
-      <div style="flex: 1; display: flex;">
+      <div style="flex: 1; display: flex; min-width: 0; min-height: 0;">
         <div class="bio">
           <img class="avatar" :src="avatar">
           
@@ -29,9 +29,11 @@
             </template>
           </div>
         </div>
-        <div class="details">
-          <textarea readonly class="info">{{ description }}</textarea>
-        </div>
+        <template v-if="props.artist.description.length !== 0">
+          <div class="details">
+            <textarea readonly class="info">{{ props.artist.description }}</textarea>
+          </div>
+        </template>
       </div>
       <div class="tracks">
         <div style="display: flex; position: sticky; top: 0; z-index: 1;">
@@ -116,13 +118,6 @@ const avatar = computed(() => {
     return MediaService.GetMediaStream(props.artist.avatar, artistContainerName, mimeImgAny);
   }
   return noSignal;
-});
-
-const description = computed(() => {
-  if (props.artist.description.length !== 0) {
-    return props.artist.description;
-  }
-  return 'No signal';
 });
 
 const getTracks = async () => {

@@ -172,7 +172,7 @@
       </div>
 
       <div class="section">
-        <div style="flex: 3;" class="info-section">
+        <div class="info-section">
           <TrackInfoComponent 
           :trackData="selectedTrack" 
           :avatarUrl="selectedTrackUserAvatar"  
@@ -180,19 +180,24 @@
           @show-playlists="onPlaylistModalClick" />
         </div>
 
-        <div style="flex: 1;" class="audio-section">
+        <div class="audio-section">
+          <canvas ref="canvas" class="visualizer"></canvas>
+          
           <textarea 
           readonly 
-          class="info" 
-          style="margin-left: 0; flex: 3; text-align-last: center;">{{ currentCaption }}</textarea>
-          
+          spellcheck="false" 
+          autocorrect="off" 
+          autocapitalize="off" 
+          class="caption">{{ currentCaption }}</textarea>
+
           <div class="audio">
             <audio 
             controls 
             controlslist="nodownload" 
+            crossorigin="anonymous" 
+            ref="audio" 
             :key="url" 
             :loop="loop" 
-            :ref="autoPlayAudio" 
             :src="url" 
             @timeupdate="$event => trackTime($event)" 
             @ended="() => ++currentIndex">
@@ -269,6 +274,7 @@ import { mediaContainerName, thumbnailContainerName, avatarContainerName, mimeIm
 import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
 import { SearchPlaylists, SearchTracks } from '../functions/SearchHelper.js';
+import { useAVLine } from 'vue-audio-visual';
 
 import noSignal from '../assets/no_signal.png';
 import TrackService from '../services/TrackService.js';
@@ -303,6 +309,8 @@ onMounted(async () => {
 const router = useRouter();
 
 const audio = ref(null);
+const canvas = ref(null);
+
 //items are dynamic components
 const items = ref([]);
 const copyOfItems = ref([]);
@@ -314,6 +322,7 @@ const genresList = ref([]);
 //0: All
 const selectedGenreId = ref(0);
 const selectedTrendingGenreId = ref(0);
+
 const tracksOfTheDay = ref([]);
 const closedCaption = ref([]);
 const isLoggedIn = ref(false);
@@ -346,6 +355,20 @@ const showCurrentPlaylistModal = ref(false);
 const showUploadTrackModal = ref(false);
 const showWelcomeModal = ref(false);
 const showAboutModal = ref(false);
+
+watch(url, (url) => {
+  useAVLine(audio, canvas, { 
+    src: url, 
+    lineColor: 'dimgray', 
+  });
+});
+
+watch(audio, (value) => {
+  if (!(!!value && !!value.src)) {
+    return;
+  }
+  value.autoplay = true;
+});
 
 watch(selectedTrack, async (track) => {
   if (!!track) {
@@ -491,13 +514,6 @@ const setCurrentIndex = (value) => {
 
 const notifyRefreshFeed = () => refreshFeed.value = true;
 
-const autoPlayAudio = (val) => {
-  audio.value = val;
-  if (!!audio.value && !!audio.value.src) {
-    audio.value.autoplay = true;
-  }
-};
-
 const trackTime = (e) => {
   const currentTime = e.target.currentTime;
   const captions = closedCaption.value;
@@ -510,7 +526,7 @@ const trackTime = (e) => {
       return (currentTime >= timestamp && currentTime <= length);
     });
 
-    currentCaption.value = !!item ? item.message : '...';
+    currentCaption.value = !!item ? item.message : '';
   }
 };
 
@@ -876,21 +892,11 @@ provide('track', {
   background-color: white;
 }
 
-.info {
-  flex: 1;
-  margin-left: 4px;
-  padding: 10px;
-  font-size: 18px;
-  white-space: pre-line;
-  resize: none;
-  color: greenyellow;
-  background-color: black;
-  border-style: double;
-  border-width: 6px;
-}
-
 .info-section {
+  flex: 3;
   display: flex;
+  min-width: 0;
+  min-height: 0;
   padding: 4px;
   overflow-y: auto;
   border-color: gray;
@@ -899,10 +905,41 @@ provide('track', {
 }
 
 .audio-section {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 4px;
+}
+
+.visualizer {
+  flex: 2;
+  min-width: 0;
+  min-height: 0;
+  color: dimgray;
+  border-color: dimgray;
+  border-style: double double none double;
+  border-radius: 4px 4px 0 0;
+  border-width: 6px;
+  background-color: black;
+}
+
+.caption {
+  flex: 3;
+  margin-left: 0;
+  padding: 10px;
+  font-size: 18px;
+  text-align-last: center;
+  white-space: pre-line;
+  resize: none;
+  color: greenyellow;
+  border-color: dimgray;
+  border-style: none double double double;
+  border-radius: 0 0 4px 4px;
+  border-width: 6px;
+  background-color: black;
 }
 
 .audio {

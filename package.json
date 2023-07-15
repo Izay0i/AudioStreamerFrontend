@@ -13,6 +13,7 @@
     "localforage": "^1.10.0",
     "pinia": "^2.0.36",
     "vue": "^3.3.2",
+    "vue-audio-visual": "^3.0.5",
     "vue-router": "^4.2.0"
   },
   "devDependencies": {

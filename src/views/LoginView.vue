@@ -195,6 +195,15 @@ const onSignInClick = async () => {
   filter: blur(4px);
 }
 
+.section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .folders {
   flex: 1;
   display: flex;

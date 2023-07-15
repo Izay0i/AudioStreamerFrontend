@@ -41,8 +41,6 @@
 
         <label for="thumbnail">Thumbnail: (Optional)</label>
         <input id="thumbnail" type="file" accept=".webp, .jpeg, .jpg, .png, .gif" @change="(e) => thumbnailFileInput = e.target.files[0]">
-        <!-- <label for="tags">Tags (Optional, must be comma-separated):</label>
-        <input id="tags" type="text" placeholder="tag1,tag2" v-model="tagsInputValue"> -->
       </form>
 
       <button style="margin: 4px" v-if="isEditable" @click="onSaveChangesClick">Save changes</button>
@@ -190,14 +188,12 @@ import AddArtistInfoModalComponent from './AddArtistInfoModalComponent.vue';
 import CaptionItemComponent from '../CaptionItemComponent.vue';
 
 onMounted(async () => {
-  const track = props.track
+  const track = props.track;
   isEditable.value = !!track;
 
   const response = await ArtistService.GetArtistName(!!track ? track.artistinfoId : selectedArtistId.value);
   selectedArtistName.value = response.objects[0];
-  if (!isEditable.value) {
-    artistInputValue.value = response.objects[0];
-  }
+  artistInputValue.value = response.objects[0];
 
   genresList.value = await GenreService.GetGenres();
   
@@ -207,13 +203,8 @@ onMounted(async () => {
     artistInputValue.value = track.artistName;
     desInputValue.value = track.description;
     
-    // track.tags.forEach((tag) => tagsInputValue.value += tag + ',');
-    // const atEnd = tagsInputValue.value.slice(-1);
-    // if (atEnd === ',') {
-    //   tagsInputValue.value = tagsInputValue.value.slice(0, -1);
-    // }
-    
     selectedGenreId.value = track.genreId;
+    selectedArtistId.value = track.artistinfoId;
     
     trackUrl.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
 
@@ -277,17 +268,6 @@ watch([trackInputValue, trackFileInput], ([trackName, trackFile]) => {
   if (!!trackFile && trackInputValue.value === '') {
     trackInputValue.value = trackFile.name;
   }
-
-  // if (!!trackName && !isEditable.value) {
-  //   const tags = trackName.replace(/[\\/\(\)\[\]]+/g, '').split(' ');
-  //   if (tags.length > 0) {
-  //     tagsInputValue.value = '';
-  //     for (let i = 0; i < tags.length - 1; ++i) {
-  //       tagsInputValue.value += tags[i].toLocaleLowerCase() + ',';
-  //     }
-  //     tagsInputValue.value += tags[tags.length - 1].toLocaleLowerCase();
-  //   }
-  // }
 });
 
 const maxUploadSize = computed(() => {
@@ -319,7 +299,7 @@ const trackTime = (e) => {
     return (currentTime >= timestamp && currentTime <= length);
   });
 
-  currentCaption.value = !!item ? item.message : '...';
+  currentCaption.value = !!item ? item.message : '';
 };
 
 const setArtistValues = (obj) => {
@@ -342,7 +322,7 @@ const onUploadClick = async () => {
     canUpload = false;
   }
   if (!canUpload) {
-    alert(`Where's your file?`);
+    alert(`Must include an audio file.`);
     return;
   }
   if (trackFileInput.value.size > maxFileSize) {

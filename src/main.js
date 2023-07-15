@@ -1,10 +1,10 @@
 import { createApp } from 'vue';
-// import { createPinia } from 'pinia';
+import { AVPlugin } from 'vue-audio-visual';
+
 import router from './router/index.js';
 import localforage from 'localforage';
 import App from './App.vue';
 
-// const pinia = createPinia();
 const app = createApp(App);
 
 localforage.config({
@@ -13,6 +13,6 @@ localforage.config({
   description: 'IDK lol',
 });
 
-// app.use(pinia);
 app.use(router);
+app.use(AVPlugin);
 app.mount('#app');
