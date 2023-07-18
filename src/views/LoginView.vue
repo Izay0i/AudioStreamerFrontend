@@ -1,9 +1,5 @@
 <template>
-  <div class="vignette">
-    <img src="../assets/backgrounds/background.gif" class="background" alt="escalator">
-  </div>
-
-  <audio preload="auto" autoplay loop :src="BGSong"></audio>
+  <div class="vignette"></div>
 
   <ModalComponent :width="30" :height="45" :title="defaultPath + defaultDir">
     <div class="section" style="flex: 1; overflow: hidden;">
@@ -52,12 +48,10 @@ import { useRouter } from 'vue-router';
 import { mainRouteName } from '../constants/RouteConstants.js';
 import { fallbackPlaylistName, placeholder } from '../constants/StringConstants.js';
 import { minNameLength, maxDisplayNameLength, minPasswordLength } from '../constants/NumericConstants.js';
+import { Status } from '../constants/StatusConstants.js';
 import { ValidateEmailAddress } from '../functions/InputHelper.js';
 import { SaveCredentials } from '../functions/StorageHelper.js';
 
-import { Status } from '../constants/StatusConstants.js';
-
-import BGSong from '../assets/music/background_music.mp3';
 import CredentialsService from '../services/CredentialsService.js';
 import PlaylistService from '../services/PlaylistService.js';
 import ModalComponent from '../components/modals/ModalComponent.vue';

@@ -181,14 +181,23 @@
         </div>
 
         <div class="audio-section">
-          <canvas ref="canvas" class="visualizer"></canvas>
-          
-          <textarea 
-          readonly 
-          spellcheck="false" 
-          autocorrect="off" 
-          autocapitalize="off" 
-          class="caption">{{ currentCaption }}</textarea>
+          <template v-if="selectedTrack.hasCaptions">
+            <canvas ref="canvas" class="visualizer"></canvas>
+
+            <textarea 
+            readonly 
+            spellcheck="false" 
+            autocorrect="off" 
+            autocapitalize="off" 
+            class="caption">{{ currentCaption }}</textarea>
+          </template>
+          <template v-else>
+            <canvas 
+            ref="canvas" 
+            class="visualizer" 
+            style="flex: 6; border-style: double; border-radius: 4px;">
+            </canvas>
+          </template>
 
           <div class="audio">
             <audio 
@@ -271,7 +280,7 @@ import { useRouter } from 'vue-router';
 import { useAVLine } from 'vue-audio-visual';
 import { credentialsRouteName } from '../constants/RouteConstants.js';
 import { maxItemsInTopList, maxRecommendedItems } from '../constants/NumericConstants.js';
-import { mediaContainerName, thumbnailContainerName, avatarContainerName, mimeImgAny, mimeSndMP3 } from '../constants/StringConstants';
+import { mediaContainerName, thumbnailContainerName, mimeImgAny, mimeSndMP3 } from '../constants/StringConstants.js';
 import { Status } from '../constants/StatusConstants.js';
 import { GetCredentials, FindTrack, SaveTrack, GetTracks } from '../functions/StorageHelper.js';
 import { SearchPlaylists, SearchTracks } from '../functions/SearchHelper.js';
@@ -380,14 +389,9 @@ watch(selectedTrack, async (track) => {
       return;
     }
 
-    const response = await MemberSevice.GetMember(selectedTrack.value.memberId);
-    const userData = response.objects[0];
-    const payload = {
-      src: userData.avatar,
-      containerName: avatarContainerName,
-      contentType: mimeImgAny,
-    };
-    selectedTrackUserAvatar.value = URL.createObjectURL(await MediaService.GetMedia(payload));
+    const response = await MemberSevice.GetMemberAvatarUrl(selectedTrack.value.memberId);
+    const avatarUrl = response.objects[0];
+    selectedTrackUserAvatar.value = avatarUrl;
     //GetMedia returns a blob, on slower network it can be a bit problematic
     url.value = MediaService.GetMediaStream(track.url, 'media', 'audio/mpeg');
   }

@@ -4,11 +4,21 @@ const name = 'member';
 
 export default {
   async GetMembers() {
-    const response = await fetch(`${BASE_URL}/${name}`);
+    const response = await fetch(`${BASE_URL}/${name}`, {
+      method: 'GET',
+      mode: 'cors',
+    });
     return response.json();
   },
   async GetMember(id) {
     const response = await fetch(`${BASE_URL}/${name}/id/${id}`, {
+      method: 'GET',
+      mode: 'cors',
+    });
+    return response.json();
+  },
+  async GetMemberAvatarUrl(id) {
+    const response = await fetch(`${BASE_URL}/${name}/avatar/${id}`, {
       method: 'GET',
       mode: 'cors',
     });

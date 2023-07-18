@@ -10,7 +10,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
           <div style="display: flex; align-items: center;">
             <p style="font-size: 18px;;">Uploader:</p>
-            <img alt="user's avatar" class="avatar" :src="infoProps.avatarUrl" @click="onAvatarClick">
+            <img alt="user's avatar" class="avatar" :src="avatar" @click="onAvatarClick">
           </div>
         
           <div style="display: flex;">
@@ -73,13 +73,13 @@ import { defaultRatingValue } from '../constants/NumericConstants.js';
 import { fallbackPlaylistName, mimeImgPNG } from '../constants/StringConstants.js';
 import { sysLocale, dateTimeFormatOptions } from '../constants/DateConstants.js';
 import { Status } from '../constants/StatusConstants.js';
-import { EncodeMedia } from '../functions/MediaHelper.js';
 import { GetCredentials } from '../functions/StorageHelper.js';
+
+import noSignal from '../assets/no_signal.png';
 
 import StatsService from '../services/StatsService.js';
 import PlaylistService from '../services/PlaylistService.js';
 import ArtistService from '../services/ArtistService.js';
-import noSignal from '../assets/no_signal.png';
 
 import DescriptionModalComponent from './modals/DescriptionModalComponent.vue';
 import ArtistInfoModalComponent from './modals/ArtistInfoModalComponent.vue';
@@ -106,7 +106,6 @@ const infoProps = defineProps({
   },
   avatarUrl: {
     type: String,
-    default: EncodeMedia(noSignal, mimeImgPNG),
   },
 });
 
@@ -187,11 +186,6 @@ const onAddToPlaylist = () => {
 };
 
 const onShowDescription = () => {
-  if (!(!!userId.value)) {
-    router.push(credentialsRouteName);
-    return;
-  }
-
   if (!(Object.keys(infoProps.trackData).length !== 0)) {
     return;
   }
@@ -201,11 +195,6 @@ const onShowDescription = () => {
 const onCloseDescription = (value) => showDescription.value = value;
 
 const onShowArtistInfo = () => {
-  if (!(!!userId.value)) {
-    router.push(credentialsRouteName);
-    return;
-  }
-
   if (!(Object.keys(infoProps.trackData).length !== 0)) {
     return;
   }
@@ -228,6 +217,13 @@ const thumbnail = computed(() => {
     return noSignal;
   }
   return infoProps.trackData.thumbnail;
+});
+
+const avatar = computed(() => {
+  if (!(!!infoProps.avatarUrl)) {
+    return noSignal;
+  }
+  return infoProps.avatarUrl;
 });
 
 const uploadedDate = computed(() => {
