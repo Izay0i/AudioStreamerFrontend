@@ -108,6 +108,17 @@ const modalDimension = computed(() => {
   align-items: stretch;
 }
 
+@media (max-width: 912px) {
+  .contents {
+    flex-direction: column;
+  }
+
+  .contents:deep(.section) {
+    border-left-style: none;
+    border-top-style: solid;
+  }
+}
+
 .contents:deep(.section) {
   flex: 1;
   border-left-style: solid;

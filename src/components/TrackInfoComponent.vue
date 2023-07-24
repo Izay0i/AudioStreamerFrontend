@@ -258,6 +258,12 @@ const uploadedDate = computed(() => {
   background-color: black;
 }
 
+@media (max-width: 912px) {
+  .thumbnail {
+    min-height: max-content;
+  }
+}
+
 .title {
   margin-right: 4px;
   text-align: center;

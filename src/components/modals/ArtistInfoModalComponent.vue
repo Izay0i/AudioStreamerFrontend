@@ -1,7 +1,7 @@
 <template>
   <ModalComponent :width="35" :height="70" :z-index="6" title="Biography" @close-modal="onModalClose">
     <div class="section">
-      <div style="flex: 1; display: flex; min-width: 0; min-height: 0;">
+      <div class="upper-body">
         <div class="bio">
           <img class="avatar" :src="avatar">
           
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted } from 'vue';
+import { ref, computed, inject, onMounted, watch } from 'vue';
 import { artistContainerName, mimeImgAny } from '../../constants/StringConstants.js';
 import { SearchTracks } from '../../functions/SearchHelper.js';
 
@@ -112,6 +112,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close-modal-top-level']);
+
+watch(() => props.artist, async () => {
+  await getTracks();
+});
 
 const avatar = computed(() => {
   if (!!props.artist.avatar) {
@@ -167,6 +171,19 @@ const onModalClose = (value) => {
   width: 100%;
   height: 100%;
   overflow: auto;
+}
+
+.upper-body {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 912px) {
+  .upper-body {
+    flex-direction: column;
+  }
 }
 
 .bio {

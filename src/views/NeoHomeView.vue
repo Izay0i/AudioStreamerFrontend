@@ -47,7 +47,7 @@
           </template>
         </ul>
 
-        <div style="display: flex; flex-direction: column; min-height: 0; height: 100%;">
+        <div class="bottom-half">
           <div style="margin-right: 4px; display: flex; justify-content: space-between; align-items: flex-end;">
             <span class="discover-label">Most viewed:</span>
             <button @click="onFetchingLatest">
@@ -73,29 +73,29 @@
       </div>
       
       <div class="section" style="overflow-y: auto;">
-        <template v-if="areItemsPopulated || showLoadingText">
-          <div style="display: flex; position: sticky; top: 0; z-index: 1;">
-            <input 
-            type="text" 
-            class="search-input" 
-            placeholder="Search items" 
-            v-model="searchInput" 
-            @keydown.enter="onSearchItems">
+        <div style="display: flex; position: sticky; top: 0; z-index: 1;">
+          <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search items" 
+          v-model="searchInput" 
+          @keydown.enter="onSearchItems">
             
-            <select style="border-radius: 0;" name="genres" v-model="selectedGenreId" @change="onSelectGenre">
-              <option value="0">All</option>
-              <template v-for="genre in genresList" :key="genre">
-                <option :value="genre.genreId">{{ genre.genreName }}</option>
-              </template>
-            </select>
+          <select style="border-radius: 0;" name="genres" v-model="selectedGenreId" @change="onSelectGenre">
+            <option value="0">All</option>
+            <template v-for="genre in genresList" :key="genre">
+              <option :value="genre.genreId">{{ genre.genreName }}</option>
+            </template>
+          </select>
 
-            <button style="border-top-left-radius: 0; border-bottom-left-radius: 0;" @click="onSearchItems">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-              </svg>
-            </button>
-          </div>
+          <button style="border-top-left-radius: 0; border-bottom-left-radius: 0;" @click="onSearchItems">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+          </button>
+        </div>
           
+        <template v-if="areItemsPopulated || showLoadingText">
           <template v-if="defaultDir === 'discover'">
             <div style="margin-top: 4px; display: flex; flex-direction: column; height: 100%;">
               <div style="flex: 1;">
@@ -181,7 +181,7 @@
         </div>
 
         <div class="audio-section">
-          <template v-if="selectedTrack.hasCaptions">
+          <template v-if="selectedTrack.hasCaptions && selectedTrack.captionsLength !== 0">
             <canvas ref="canvas" class="visualizer"></canvas>
 
             <textarea 
@@ -309,6 +309,8 @@ import WelcomeModalComponent from '../components/modals/WelcomeModalComponent.vu
 import AboutModalComponent from '../components/modals/AboutModalComponent.vue';
 
 onMounted(async () => {
+  await onFolderClick(_listItems[0]);
+
   userId.value = await GetCredentials();
   isLoggedIn.value = !!userId.value;
   await _getTracksWithTheMostViewsOfTheDay();
@@ -854,6 +856,27 @@ provide('track', {
   align-items: stretch;
 }
 
+@media (max-width: 912px) {
+  .contents {
+    flex-direction: column-reverse;
+  }
+
+  .contents > * {
+    border-left-style: none;
+    border-top-style: solid;
+  }
+
+  .bottom-half {
+    margin-top: 20px;
+    min-height: max-content !important;
+    height: 100%;
+  }
+
+  .visualizer, .caption {
+    display: none;
+  }
+}
+
 .contents > * {
   flex: 1;
   border-left-style: solid;
@@ -869,6 +892,7 @@ provide('track', {
   min-height: 0;
   width: 100%;
   height: 100%;
+  overflow: auto;
 }
 
 .folders {
@@ -974,6 +998,13 @@ provide('track', {
 .item:hover {
   cursor: pointer;
   border-style: inset;
+}
+
+.bottom-half {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .top-list {

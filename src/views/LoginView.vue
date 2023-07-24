@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { mainRouteName } from '../constants/RouteConstants.js';
 import { fallbackPlaylistName, placeholder } from '../constants/StringConstants.js';
@@ -55,6 +55,10 @@ import { SaveCredentials } from '../functions/StorageHelper.js';
 import CredentialsService from '../services/CredentialsService.js';
 import PlaylistService from '../services/PlaylistService.js';
 import ModalComponent from '../components/modals/ModalComponent.vue';
+
+onMounted(() => {
+  onFolderClick(_listItems[0]);
+});
 
 const defaultPath = 'credentials\\';
 const defaultDir = ref('*.*');

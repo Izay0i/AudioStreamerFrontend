@@ -146,4 +146,10 @@ const onClearPlaylistClick = () => {
   border-style: double;
   border-width: 6px;
 }
+
+@media (max-width: 912px) {
+  .info {
+    display: none;
+  }
+}
 </style>
